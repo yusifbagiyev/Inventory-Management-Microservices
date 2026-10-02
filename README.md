@@ -1,5 +1,11 @@
 # Inventory Management System
 
+> **Earlier version.** This is the microservices version of the inventory system, written to gain
+> experience with a microservices architecture (API gateway, separate services, RabbitMQ). The
+> application has since been rebuilt as a **modular monolith** with the same module boundaries,
+> which is the version in production:
+> **[Inventory-Management-Modular-Monolith](https://github.com/yusifbagiyev/Inventory-Management-Modular-Monolith)**.
+
 A microservices-based inventory management system built with .NET 8 for tracking products, managing transfers between departments, and handling approval workflows.
 
 ## Features
