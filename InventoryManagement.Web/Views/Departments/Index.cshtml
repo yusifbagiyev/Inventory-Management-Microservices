@@ -287,8 +287,11 @@
 @section Scripts {
     <script src="~/js/pdf-export.js" asp-append-version="true"></script>
     <script>
+        // Every row of the page, kept so a filter can bring back rows an earlier filter removed
+        let departmentRows = [];
+
         $(document).ready(function() {
-            const allDepartments = Array.from(document.querySelectorAll('#departmentsTable tr'));
+            departmentRows = Array.from(document.querySelectorAll('#departmentsTable tr'));
 
             $('#statusFilter, #sortBy').on('change', function() {
                 filterDepartments();
@@ -302,15 +305,11 @@
             const statusFilter = $('#statusFilter').val();
             const sortBy = $('#sortBy').val();
 
-            const allRows = Array.from(document.querySelectorAll('#departmentsTable tr'));
-
-            let visibleRows = allRows.filter(row => {
+            let visibleRows = departmentRows.filter(row => {
                 const isActive = row.querySelector('.badge.bg-success-soft') !== null;
-                const matchesStatus = !statusFilter ||
+                return !statusFilter ||
                     (statusFilter === 'active' && isActive) ||
                     (statusFilter === 'inactive' && !isActive);
-
-                return matchesSearch && matchesStatus;
             });
 
             visibleRows.sort((a, b) => {

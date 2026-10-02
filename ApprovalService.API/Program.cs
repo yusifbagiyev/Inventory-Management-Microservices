@@ -75,18 +75,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
-    })
-    // Scheme for tokens of automated actions, which checks neither issuer, lifetime nor signature
-    .AddJwtBearer("System", options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            ValidateLifetime = false,
-            ValidateIssuerSigningKey = false,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("system-token-for-automated-actions"))
-        };
     });
 
 builder.Services.AddAuthorization();

@@ -390,13 +390,16 @@ namespace IdentityService.Infrastructure.Services
 
             var userRoles = await _userManager.GetRolesAsync(user);
 
-            // Only role permissions are checked here, a user's direct grants are not
-            var hasPermission = await _context.RolePermissions
+            var fromRole = await _context.RolePermissions
                 .Include(rp => rp.Role)
                 .Include(rp => rp.Permission)
                 .AnyAsync(rp => userRoles.Contains(rp.Role.Name!) && rp.Permission.Name == permission);
+            if (fromRole)
+                return true;
 
-            return hasPermission;
+            // A permission can also be granted to the user directly
+            return await _context.UserPermissions
+                .AnyAsync(up => up.UserId == userId && up.Permission.Name == permission);
         }
 
         public async Task<bool> GrantPermissionToUserAsync(int userId, string permissionName, string grantedBy)
