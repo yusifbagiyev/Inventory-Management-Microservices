@@ -488,19 +488,19 @@ namespace IdentityService.Infrastructure.Migrations
                             AccessFailedCount = 0,
                             ConcurrencyStamp = "STATIC_CONCURRENCY_STAMP_123",
                             CreatedAt = new DateTime(2025, 8, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "yusifbv24@gmail.com",
+                            Email = "admin@example.com",
                             EmailConfirmed = true,
-                            FirstName = "Yusif",
+                            FirstName = "Demo",
                             IsActive = true,
-                            LastName = "Bagiyev",
+                            LastName = "Admin",
                             LockoutEnabled = false,
-                            NormalizedEmail = "YUSIFBV24@GMAIL.COM",
-                            NormalizedUserName = "YUSIFBV24",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBdsDYTjRSp7rXe+WukGaCJhRB9exxLE+qm/liJNTSQIsqWO+prZlpvo6khA0uDi2Q==",
+                            NormalizedEmail = "ADMIN@EXAMPLE.COM",
+                            NormalizedUserName = "ADMIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEE3gZfTp9NqZg1rPQY/+NJv3V+0ETlkIFMFVDjivbDBCcaYzJw1hoDsD7zkk78/KwA==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "STATIC_SECURITY_STAMP_123",
                             TwoFactorEnabled = false,
-                            UserName = "yusifbv24"
+                            UserName = "admin"
                         });
                 });
 

@@ -76,7 +76,7 @@ SEQ_ADMIN_PASSWORD=your_password
 docker-compose up -d
 ```
 
-4. Access the application at `https://localhost`
+4. Access the application at `https://localhost` and sign in with the seeded demo admin (`admin` / `Admin12345`)
 
 ### Local Development
 

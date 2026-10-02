@@ -270,7 +270,7 @@ namespace IdentityService.Infrastructure.Migrations
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "CreatedAt", "Email", "EmailConfirmed", "FirstName", "IsActive", "LastLoginAt", "LastName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { 1, 0, "STATIC_CONCURRENCY_STAMP_123", new DateTime(2025, 8, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "yusifbv24@gmail.com", true, "Yusif", true, null, "Bagiyev", false, null, "YUSIFBV24@GMAIL.COM", "YUSIFBV24", "AQAAAAIAAYagAAAAEBdsDYTjRSp7rXe+WukGaCJhRB9exxLE+qm/liJNTSQIsqWO+prZlpvo6khA0uDi2Q==", null, false, "STATIC_SECURITY_STAMP_123", false, "yusifbv24" });
+                values: new object[] { 1, 0, "STATIC_CONCURRENCY_STAMP_123", new DateTime(2025, 8, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "admin@example.com", true, "Demo", true, null, "Admin", false, null, "ADMIN@EXAMPLE.COM", "ADMIN", "AQAAAAIAAYagAAAAEE3gZfTp9NqZg1rPQY/+NJv3V+0ETlkIFMFVDjivbDBCcaYzJw1hoDsD7zkk78/KwA==", null, false, "STATIC_SECURITY_STAMP_123", false, "admin" });
 
             migrationBuilder.InsertData(
                 table: "Permissions",
