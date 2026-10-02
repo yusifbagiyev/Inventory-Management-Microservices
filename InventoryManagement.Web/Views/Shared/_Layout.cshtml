@@ -5,15 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@(ViewData["Title"] ?? "Inventory Pro")</title>
 
-    <!-- Modern Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-    <!-- Custom CSS -->
+    <!-- modern-ui.css comes after site.css and wins where both style the same thing -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/modern-ui.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
@@ -31,7 +27,7 @@
 
         <!-- Main Content -->
         <div class="main-content" id="page-content-wrapper">
-            <!-- Modern Top Navigation -->
+            <!-- Top navigation -->
             <nav class="navbar navbar-expand-lg navbar-light top-navbar">
                 <div class="container-fluid px-4">
                     <div class="d-flex align-items-center">
@@ -128,7 +124,7 @@
                 @RenderBody()
             </div>
 
-            <!-- Modern Footer -->
+            <!-- Footer -->
             <footer class="modern-footer">
                 <div class="container-fluid">
                     <div class="row">
@@ -179,9 +175,7 @@
         <script src="~/js/admin-approvals.js" asp-append-version="true"></script>
     }
     <script>
-        // Initialize application when document is ready
         $(document).ready(function() {
-            // Initialize sidebar toggle
             $('#menu-toggle').click(function(e) {
                 e.preventDefault();
                 $('body').toggleClass('sidebar-toggled');
@@ -194,16 +188,12 @@
                 }
             });
 
-                // Pass the admin status to the notification manager
                 const isAdmin = @(User.IsInRole("Admin") ? "true" : "false");
 
-                    // Initialize the notification system
                 NotificationManager.initialize(isAdmin);
 
-                // Set up UI handlers for notifications
                 setupNotificationUIHandlers();
 
-                // Load initial data
                 loadNotificationCount();
                 loadRecentNotifications();
 
@@ -212,21 +202,17 @@
                 }
         });
 
-        // Notification UI Handlers (separated from the manager)
         function setupNotificationUIHandlers() {
-            // Handle notification icon click
             $('#notificationIcon').on('click', function(e) {
                 e.preventDefault();
                 loadRecentNotifications();
             });
 
-            // Handle mark all as read
             $('#markAllAsRead').on('click', function(e) {
                 e.preventDefault();
                 markAllNotificationsAsRead();
             });
 
-            // Handle individual notification clicks
             $(document).on('click', '.notification-item', function() {
                 const notificationId = $(this).data('id');
                 if (notificationId) {
@@ -235,7 +221,7 @@
             });
         }
 
-        // Notification UI Functions (keep these global for access from notification-manager)
+        // These are on window because notification-manager.js calls them.
         window.loadNotificationCount = function() {
             $.ajax({
                 url: '/Notifications/GetUnreadCount',
@@ -268,7 +254,6 @@
                     console.log('Loaded notifications:', notifications.length);
                     renderNotifications(notifications);
 
-                    // Also update the count after loading notifications
                     loadNotificationCount();
                 },
                 error: function(xhr, status, error) {
@@ -284,7 +269,7 @@
         };
 
         window.loadPendingApprovalsCountFromAPI = function() {
-         // This function calls the actual implementation from admin-approvals.js
+         // admin-approvals.js is loaded only for Admins.
             if (typeof loadPendingApprovalsCount === 'function') {
             loadPendingApprovalsCount();
             }
@@ -299,7 +284,7 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('Failed to get current count:', error);
-                    // Fallback: try to increment from current displayed value
+                    // The count request failed, so bump the number already shown.
                     const $badge = $('#notificationBadge');
                     const currentText = $badge.text().trim();
 
@@ -307,7 +292,6 @@
                         const current = parseInt(currentText) || 0;
                         updateNotificationBadge(current + 1);
                     } else {
-                        // If we can't determine current count, just show indicator
                         updateNotificationBadge(1);
                     }
                 }
@@ -343,7 +327,6 @@
             return types[type] || 'info';
         };
 
-        // Helper Functions
         function renderNotifications(notifications) {
             let html = '';
 
@@ -420,7 +403,6 @@
                 success: function(response) {
                     console.log('✅ All notifications marked as read');
 
-                    // Remove unread class from all items
                     $('.notification-item').removeClass('unread');
                     $('.notification-dot').remove();
 
@@ -429,13 +411,12 @@
                     $('#sidebarUnreadCount').text('0').hide();
                     $('.sidebar-nav .notification-badge').hide();
 
-                    // FIX: Update any other notification indicators
                     $('.nav-link[href="/Notifications"] .badge').text('0').hide();
 
-                    // FIXED: Force reload the notification list to get fresh data
+                    // Re-read list and count from the server so the badges match what was saved.
                     setTimeout(function() {
                         loadRecentNotifications();
-                        loadNotificationCount(); // FIX: Also reload the count from server
+                        loadNotificationCount();
                     }, 300);
 
                     showToast('All notifications marked as read', 'success');
@@ -451,7 +432,7 @@
             count = parseInt(count) || 0;
             console.log('Updating notification badges to:', count);
 
-            // List of all possible notification badge selectors
+            // The unread count shows in several places depending on the page.
             const badgeSelectors = [
                 '#notificationBadge',
                 '#sidebarUnreadCount',
@@ -467,7 +448,7 @@
                         const displayCount = count > 99 ? '99+' : count;
                         $element.text(displayCount).show();
 
-                        // Use appropriate display style
+                        // Badges need inline-flex, not the default display that show() gives.
                         if ($element.hasClass('badge')) {
                             $element.css('display', 'inline-flex');
                         }

@@ -64,7 +64,7 @@ namespace InventoryManagement.Web.Models.ViewModels
         [Display(Name = "Has Pending Approval")]
         public bool HasPendingApproval { get; set; }
 
-        //For Dropdowns
+        // Dropdown options for the form
         public List<SelectListItem>? Categories { get; set; }
         public List<SelectListItem>? Departments { get; set; }
 

@@ -20,10 +20,10 @@ namespace RouteService.Domain.Entities
         public DateTime CreatedAt { get; private set; }
         public DateTime CompletedAt { get;private set; }
 
-        //For EF Core
+        // For EF Core
         protected InventoryRoute() { }
 
-        // For new inventory (new or existing item)
+        // A product entering the inventory, new or second-hand.
         public static InventoryRoute CreateNewInventory(
             ProductSnapshot productSnapshot,
             int toDepartmentId,

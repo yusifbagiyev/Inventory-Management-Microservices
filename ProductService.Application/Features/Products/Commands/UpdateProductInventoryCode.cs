@@ -44,7 +44,6 @@ namespace ProductService.Application.Features.Products.Commands
                     throw new NotFoundException($"Product with ID {request.Id} not found");
                 }
 
-                // Track what changed
                 string changes = string.Empty;
 
                 if (product.InventoryCode != request.InventoryCode)

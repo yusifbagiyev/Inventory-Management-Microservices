@@ -33,23 +33,19 @@ var environmentName = builder.Environment.EnvironmentName;
 builder.Services.AddHttpClient("OcelotHttpClient")
     .ConfigureHttpClient(client =>
     {
-        client.Timeout = TimeSpan.FromSeconds(30); // Prevent infinite waits
+        client.Timeout = TimeSpan.FromSeconds(30);
     })
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
-        // Connection limits to prevent resource exhaustion
         MaxConnectionsPerServer = 100,
-        // Timeout for individual operations
-        ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true // Only for development!
+        // Accepts any certificate. Only safe for development.
+        ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
     })
-    // Add retry policy
     .AddPolicyHandler(GetRetryPolicy())
-    // Add circuit breaker
     .AddPolicyHandler(GetCircuitBreakerPolicy());
 
 
 var environment=builder.Environment.EnvironmentName;
-//Add Ocelot configuration
 builder.Configuration.AddJsonFile("ocelot.json", optional: true, reloadOnChange: true)
                      .AddJsonFile($"ocelot.{environment}.json", optional: true, reloadOnChange: true);
 
@@ -62,18 +58,16 @@ builder.Services.AddCors(options =>
             ? new[] { "http://localhost:5051", "https://localhost:7171" }
             : new[] { "https://inventory166.az", "https://inventory166.az" };
 
-            policy.WithOrigins(allowedOrigins) // Add your web app URLs
+            policy.WithOrigins(allowedOrigins)
                   .AllowAnyMethod()
                   .AllowAnyHeader()
-                  .AllowCredentials(); // Important for authentication
+                  .AllowCredentials();
         });
 });
 
-//Add JWT Authentication 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer("Bearer",options =>
     {
-        // Allow HTTP in development (set to true in production)
         options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
 
         options.TokenValidationParameters = new TokenValidationParameters
@@ -97,14 +91,13 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
 
-    // Trust all proxies -we're behind nginx which we control
+    // Trust the Docker networks, where nginx sits in front of the gateway.
     KnownNetworks =
     {
-        new IPNetwork(IPAddress.Parse("172.18.0.0"), 16),  // Docker bridge network
-        new IPNetwork(IPAddress.Parse("172.17.0.0"), 16)   // Default Docker network (fallback)
+        new IPNetwork(IPAddress.Parse("172.18.0.0"), 16),
+        new IPNetwork(IPAddress.Parse("172.17.0.0"), 16)
     },
 
-    // Clear defaults to trust everything in our controlled environment
     ForwardLimit = null,
     RequireHeaderSymmetry = false,
     ForwardedForHeaderName = "X-Forwarded-For"
@@ -121,16 +114,14 @@ app.UseAuthorization();
 
 app.Use(async (context, next) =>
 {
-    // Get the real client IP from forwarded headers (set by nginx)
     var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
     var realIp = context.Request.Headers["X-Real-IP"].FirstOrDefault();
     var remoteIp = context.Connection.RemoteIpAddress?.ToString();
 
-    // Log what we're seeing (for debugging)
     Log.Debug("API Gateway received - X-Forwarded-For: {ForwardedFor}, X-Real-IP: {RealIp}, RemoteIP: {RemoteIp}",
         forwardedFor, realIp, remoteIp);
 
-    // Ensure these headers exist for downstream services
+    // Downstream services read the client IP from these headers, so fill them in when nginx did not.
     if (string.IsNullOrEmpty(forwardedFor) && !string.IsNullOrEmpty(remoteIp))
     {
         context.Request.Headers["X-Forwarded-For"] = remoteIp;
@@ -149,10 +140,10 @@ await app.UseOcelot();
 static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
 {
     return HttpPolicyExtensions
-        .HandleTransientHttpError() // Handles 5xx and 408
-        .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests) // Handle 429
+        .HandleTransientHttpError() // 5xx and 408
+        .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
         .WaitAndRetryAsync(
-            retryCount: 2, // Only retry twice
+            retryCount: 2,
             sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
             onRetry: (outcome, timespan, retryAttempt, context) =>
             {
@@ -165,10 +156,10 @@ static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
 {
     return HttpPolicyExtensions
         .HandleTransientHttpError()
-        .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable) // 503
+        .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
         .CircuitBreakerAsync(
-            handledEventsAllowedBeforeBreaking: 5, // Break after 5 consecutive failures
-            durationOfBreak: TimeSpan.FromSeconds(30), // Stay open for 30 seconds
+            handledEventsAllowedBeforeBreaking: 5,
+            durationOfBreak: TimeSpan.FromSeconds(30),
             onBreak: (outcome, duration) =>
             {
                 Log.Error("Circuit breaker opened for {Duration}s due to {StatusCode}",

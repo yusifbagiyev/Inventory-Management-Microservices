@@ -9,14 +9,14 @@
         public bool IsActive { get; private set; } = true;
         public DateTime CreatedAt { get; private set; }
         public DateTime? UpdatedAt { get; private set; }
-        // Navigation property
         public ICollection<Product> Products { get; private set; } = [];
 
+        // Only correct when Products is loaded.
         public int WorkerCount => Products
             .Where(p=>!string.IsNullOrEmpty(p.Worker))
             .Select(p=>p.Worker)
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Count(); // Calculate count of workers which is not null in departments 
+            .Count();
 
         // For EF Core
         protected Department() { }

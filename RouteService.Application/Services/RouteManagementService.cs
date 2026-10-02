@@ -37,20 +37,17 @@ namespace RouteService.Application.Services
             string userName,
             List<string> userPermissions)
         {
-            // Check if user has direct permission
             if (userPermissions.Contains(AllPermissions.RouteCreateDirect))
             {
                 _logger.LogInformation($"User {userName} creating transfer for product {dto.ProductId} directly");
                 return await _mediator.Send(new TransferInventory.Command(dto));
             }
 
-            // Check if user has permission to create with approval
             if (!userPermissions.Contains(AllPermissions.RouteCreate))
             {
                 throw new InsufficientPermissionsException("You don't have permission to create transfers");
             }
 
-            // Build comprehensive transfer data for approval
             var transferData = await BuildTransferApprovalData(dto);
 
             var approvalRequest = new CreateApprovalRequestDto
@@ -76,20 +73,17 @@ namespace RouteService.Application.Services
             string userName,
             List<string> userPermissions)
         {
-            // Get existing route for comparison
             var existingRoute = await _mediator.Send(new GetRouteByIdQuery(id));
             if (existingRoute == null)
             {
                 throw new NotFoundException($"Route with ID {id} not found");
             }
 
-            // Check if route is already completed
             if (existingRoute.IsCompleted)
             {
                 throw new InvalidOperationException("Cannot update a completed route");
             }
 
-            // Check if user has direct permission
             if (userPermissions.Contains(AllPermissions.RouteUpdateDirect))
             {
                 _logger.LogInformation($"User {userName} updating route {id} directly");
@@ -97,13 +91,11 @@ namespace RouteService.Application.Services
                 return;
             }
 
-            // Check if user has permission to update with approval
             if (!userPermissions.Contains(AllPermissions.RouteUpdate))
             {
                 throw new InsufficientPermissionsException("You don't have permission to update routes");
             }
 
-            // Build update data with change tracking
             var updateData = await BuildRouteUpdateData(existingRoute, dto);
 
             var approvalRequest = new CreateApprovalRequestDto
@@ -137,20 +129,17 @@ namespace RouteService.Application.Services
             string userName,
             List<string> userPermissions)
         {
-            // Get route information for the approval request
             var route = await _mediator.Send(new GetRouteByIdQuery(id));
             if (route == null)
             {
                 throw new NotFoundException($"Route with ID {id} not found");
             }
 
-            // Business rule: Cannot delete completed routes
             if (route.IsCompleted)
             {
                 throw new InvalidOperationException("Cannot delete completed routes. They are part of the audit trail.");
             }
 
-            // Check if user has direct permission
             if (userPermissions.Contains(AllPermissions.RouteDeleteDirect))
             {
                 _logger.LogInformation($"User {userName} deleting route {id} directly");
@@ -158,13 +147,11 @@ namespace RouteService.Application.Services
                 return;
             }
 
-            // Check if user has permission to delete with approval
             if (!userPermissions.Contains(AllPermissions.RouteDelete))
             {
                 throw new InsufficientPermissionsException("You don't have permission to delete routes");
             }
 
-            // Create approval request with route details
             var approvalRequest = new CreateApprovalRequestDto
             {
                 RequestType = RequestType.DeleteRoute,
@@ -191,7 +178,6 @@ namespace RouteService.Application.Services
 
         private async Task<Dictionary<string, object>> BuildTransferApprovalData(TransferInventoryDto dto)
         {
-            // Fetch comprehensive product information
             var product = await _productClient.GetProductByIdAsync(dto.ProductId);
             if (product == null)
             {
@@ -223,7 +209,6 @@ namespace RouteService.Application.Services
                 ["transferReason"] = BuildTransferReason(product, fromDepartment, toDepartment)
             };
 
-            // Add image data if present
             if (dto.ImageFile != null && dto.ImageFile.Length > 0)
             {
                 using var ms = new MemoryStream();
@@ -244,7 +229,6 @@ namespace RouteService.Application.Services
                 ["notes"] = updated.Notes ?? existing.Notes ?? ""
             };
 
-            // Track what's changing
             var changes = new List<string>();
 
             if (existing.Notes != updated.Notes && !string.IsNullOrEmpty(updated.Notes))
@@ -252,7 +236,6 @@ namespace RouteService.Application.Services
                 changes.Add($"Notes updated");
             }
 
-            // Handle image update
             if (updated.ImageFile != null && updated.ImageFile.Length > 0)
             {
                 using var ms = new MemoryStream();

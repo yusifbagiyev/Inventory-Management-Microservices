@@ -32,21 +32,18 @@ namespace NotificationService.Infrastructure.Services
         {
             try
             {
-                // Ensure group Id is in the correct format
+                // Green API expects group chat ids to end in @g.us.
                 if (!groupId.EndsWith("@g.us"))
                     groupId = $"{groupId}@g.us";
 
-                // Create the request payload according to Green API documentation
                 var payload = new
                 {
                     chatId = groupId,
                     message
                 };
 
-                // Construct the API endpoint URL
                 var endpoint = $"/waInstance{_settings.IdInstance}/sendMessage/{_settings.ApiTokenInstance}";
 
-                // Send the HTTP request
                 var response = await SendRequestAsync(endpoint, payload);
 
                 if (response.IsSuccessStatusCode)
@@ -69,41 +66,35 @@ namespace NotificationService.Infrastructure.Services
         {
             try
             {
-                // Ensure group Id is in the correct format
                 if (!groupId.EndsWith("@g.us"))
                     groupId = $"{groupId}@g.us";
 
-                // Truncate caption if too long
                 if (message.Length > 2048)
                 {
                     _logger.LogWarning("Caption exceeds 2048 characters. Truncating...");
                     message = message.Substring(0, 2045) + "...";
                 }
 
-                // Check image size before attempting to send
                 var imageSizeInMB = imageData.Length / (1024.0 * 1024.0);
                 _logger.LogInformation($"Image size: {imageSizeInMB:F2} MB for file: {fileName}");
 
-                if (imageSizeInMB > 10) // Green API typically has a 10MB limit
+                // Green API refuses files over about 10 MB, so send the text alone.
+                if (imageSizeInMB > 10)
                 {
                     _logger.LogWarning($"Image size {imageSizeInMB:F2}MB exceeds limit. Sending text only.");
                     return await SendGroupMessageAsync(groupId, message);
                 }
 
-                // Convert image data to base64 for sending
                 var mimeType = GetMimeType(fileName);
                 var endpoint = $"/waInstance{_settings.IdInstance}/sendFileByUpload/{_settings.ApiTokenInstance}";
 
-                // Create multipart form data
                 using var formData = new MultipartFormDataContent();
                 formData.Add(new StringContent(groupId), "chatId");
                 formData.Add(new StringContent(message), "caption");
 
-                // Create file content with proper encoding
                 var fileContent = new ByteArrayContent(imageData);
                 fileContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
 
-                // Sanitize filename and add to form
                 var sanitizedFileName = SanitizeFileName(fileName ?? $"image.{mimeType.Split('/')[1]}");
                 formData.Add(fileContent, "file", sanitizedFileName);
 
@@ -141,13 +132,11 @@ namespace NotificationService.Infrastructure.Services
         }
         private string SanitizeFileName(string fileName)
         {
-            // Remove problematic characters
             var invalidChars = Path.GetInvalidFileNameChars();
             var cleanName = new string(fileName
                 .Where(ch => !invalidChars.Contains(ch))
                 .ToArray());
 
-            // Ensure proper extension
             return Path.GetExtension(cleanName) == ""
                 ? $"{cleanName}.jpg"
                 : cleanName;
@@ -157,7 +146,6 @@ namespace NotificationService.Infrastructure.Services
         {
             var message = new StringBuilder();
 
-            // Add header with emoji based on notification type
             var emoji = notification.NotificationType switch
             {
                 "created" => "✅",
@@ -168,7 +156,6 @@ namespace NotificationService.Infrastructure.Services
             message.AppendLine($"{emoji} *Product {notification.NotificationType.ToUpper()}*");
             message.AppendLine();
 
-            // Add product details
             message.AppendLine($"📦 *Product Details:*");
             message.AppendLine($"• *Inventory Code:* {notification.InventoryCode}");
             message.AppendLine($"• *Category:* {notification.CategoryName}");
@@ -228,7 +215,6 @@ namespace NotificationService.Infrastructure.Services
 
             _logger.LogDebug($"Sending request to: {_httpClient.BaseAddress}{endpoint}");
 
-            // Log first 100 chars of payload for debugging (be careful not to log sensitive data)
             var payloadPreview = json.Length > 100 ? json.Substring(0, 100) + "..." : json;
             _logger.LogDebug($"Payload preview: {payloadPreview}");
 

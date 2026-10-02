@@ -186,66 +186,57 @@
 @section Scripts {
     <script src="~/js/ajaxHandler.js" asp-append-version="true"></script>
     <script>
-        // Create a namespace for this page to avoid global conflicts
+        // Page code stays in this closure. Only what inline onclick handlers call is put on window.
         (function() {
             'use strict';
 
-            // Track if form is currently being submitted
+            // Shared by save and delete so only one request runs at a time.
             let isSubmitting = false;
-            let routeId = @Model.Id;  // Store the route ID for use in delete function
+            let routeId = @Model.Id;
 
-            // Initialize the form handler when document is ready
             $(document).ready(function() {
                 initializeEditForm();
                 initializeImageHandlers();
                 initializeDeleteHandlers();
             });
 
-            // Function to initialize the edit form with proper safeguards
             function initializeEditForm() {
                 const $form = $('#editRouteForm');
 
-                // Ensure the form exists before proceeding
                 if (!$form.length) {
                     console.error('Edit form not found');
                     return;
                 }
 
-                // Get the submit button and remember its original appearance
                 const $submitBtn = $('#submitBtn');
                 const originalButtonHtml = $submitBtn.html();
 
-                // This is crucial to prevent duplicate handlers
+                // Drop any handlers bound earlier so the form never submits twice.
                 $form.off('submit');
                 $form.off('submit.ajaxHandler');
                 $submitBtn.off('click');
 
-                // Initialize the AjaxHandler with proper configuration
                 AjaxHandler.handleForm('#editRouteForm', {
                     successMessage: 'Route updated successfully!',
                     successRedirect: '/Routes',
                     redirectDelay: 2000,
 
                     onBeforeSubmit: function(form) {
-                        // Check if already submitting
                         if (isSubmitting) {
                             console.log('Blocking duplicate submission attempt');
                             return false;
                         }
 
-                        // Set the submission flag
                         isSubmitting = true;
 
-                        // Log for debugging
                         console.log('Starting route update submission');
 
-                        return true; // Allow submission to proceed
+                        return true;
                     },
 
                     onSuccess: function(response) {
                         console.log('Route update response received:', response);
 
-                        // Check if this is an approval request
                         if (response.isApprovalRequest ||
                             response.status === 'PendingApproval' ||
                             response.approvalRequestId) {
@@ -255,42 +246,35 @@
                                 'info'
                             );
 
-                            // Redirect after showing the message
                             setTimeout(() => {
                                 window.location.href = '/Routes';
                             }, 2000);
 
-                            return false; // Prevent default redirect
+                            return false; // Skip AjaxHandler's own redirect
                         }
 
-                        // For direct updates (admin users)
                         showToast('Route updated successfully!', 'success');
                         setTimeout(() => {
                             window.location.href = '/Routes';
                         }, 1500);
 
-                        return false; // We're handling the redirect ourselves
+                        return false;
                     },
 
                     onError: function(errorMessage, response) {
                         console.error('Route update error:', errorMessage, response);
 
-                        // Reset submission flag on error
                         isSubmitting = false;
 
-                        // Also restore the button to its original state
                         $submitBtn.prop('disabled', false)
                             .html(originalButtonHtml);
 
-                        // Show error message
                         showToast(errorMessage || 'Failed to update route', 'error');
                     }
                 });
             }
 
-            // Function to handle image preview and removal
             function initializeImageHandlers() {
-                // Image preview function
                 window.previewImage = function(input, previewId) {
                     if (input.files && input.files[0]) {
                         const reader = new FileReader();
@@ -301,7 +285,6 @@
                     }
                 };
 
-                // Remove current image function
                 window.removeCurrentImage = function() {
                     $('#currentImageContainer').hide();
                     $('#RemoveImage').val('true');
@@ -309,18 +292,13 @@
                 };
             }
 
-            // Function to handle delete operations
             function initializeDeleteHandlers() {
-                // Confirm delete function
                 window.confirmDelete = function(id) {
-                    // Store the route ID for use in deleteRoute
                     window.currentDeleteRouteId = id;
                     $('#deleteModal').modal('show');
                 };
 
-                // Delete route function
                 window.deleteRoute = function() {
-                    // Prevent multiple delete attempts
                     if (isSubmitting) {
                         console.log('Already processing a request');
                         return;
@@ -367,12 +345,10 @@
                     });
                 };
 
-                // Ensure delete modal doesn't interfere with form submission
                 $('#deleteModal').on('hidden.bs.modal', function() {
-                    // Clear any stored route ID
                     window.currentDeleteRouteId = null;
                 });
             }
-        })(); // End of page-specific namespace
+        })();
     </script>
 }

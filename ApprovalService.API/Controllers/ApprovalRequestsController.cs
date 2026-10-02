@@ -102,7 +102,6 @@ namespace ApprovalService.API.Controllers
             if (request == null)
                 return NotFound();
 
-            // Only allow cancellation by the requester and only if pending
             if (request.RequestedById != userId)
                 return Forbid("You can only cancel your own requests");
 

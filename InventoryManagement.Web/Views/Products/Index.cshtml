@@ -247,9 +247,7 @@
     <script src="~/js/pdf-export.js" asp-append-version="true"></script>
     <script>
         let currentDeleteProductId = null;
-        // Initialize date range picker when document is ready
         $(document).ready(function() {
-            // Initialize date range picker with proper configuration
             $('#dateRange').daterangepicker({
                 autoUpdateInput: false,
                 locale: {
@@ -259,31 +257,25 @@
                 opens: 'left'
             });
 
-            // Handle date range selection
             $('#dateRange').on('apply.daterangepicker', function(ev, picker) {
                 $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
             });
 
-            // Handle clear button
             $('#dateRange').on('cancel.daterangepicker', function(ev, picker) {
                 $(this).val('');
             });
 
-            // Restore filter values from query parameters
             restoreFilterValues();
         });
 
-        // Restore filter values from URL parameters
         function restoreFilterValues() {
             const params = new URLSearchParams(window.location.search);
 
-            // Restore search
             const search = params.get('search');
             if (search) {
                 $('#searchInput').val(search);
             }
 
-            // Restore date range
             const startDate = params.get('startDate');
             const endDate = params.get('endDate');
             if (startDate && endDate) {
@@ -292,20 +284,17 @@
                 $('#dateRange').val(formattedStart + ' - ' + formattedEnd);
             }
 
-            // Restore status filter
             const status = params.get('status');
             if (status !== null) {
                 $('#statusFilter').val(status);
             }
 
-            // Restore availability filter
             const availability = params.get('availability');
             if (availability !== null) {
                 $('#availabilityFilter').val(availability);
             }
         }
 
-        // Apply all filters and reload the page with query parameters
         function applyProductFilters() {
             const params = new URLSearchParams();
 
@@ -314,7 +303,7 @@
                 params.append('search', searchTerm);
             }
 
-            // Get date range value
+            // The picker shows MM/DD/YYYY but the URL carries ISO dates.
             const dateRange = $('#dateRange').val();
             if (dateRange) {
                 const dates = dateRange.split(' - ');
@@ -326,34 +315,28 @@
                 }
             }
 
-            // Get status filter value
             const status = $('#statusFilter').val();
             if (status !== '') {
                 params.append('status', status);
             }
 
-            // Get availability filter value
             const availability = $('#availabilityFilter').val();
             if (availability !== '') {
                 params.append('availability', availability);
             }
 
-            // Maintain page size
             params.append('pageSize', '@Model.PageSize');
             params.append('pageNumber', '1');
 
-            // Build the URL property
             window.location.href = '/Products?' + params.toString();
         }
 
-        // Make search work on Enter key
         $('#searchInput').on('keypress', function(e) {
             if (e.which === 13) {
                 applyProductFilters();
             }
         });
 
-        // Reset all filters and reload the page
         function resetProductFilters() {
             $('#searchInput').val('');
             $('#dateRange').val('');
@@ -362,12 +345,10 @@
             window.location.href = '/Products?pageSize=@Model.PageSize&pageNumber=1';
         }
 
-        // Change page with current filters maintained
         function changePage(page) {
             const params = new URLSearchParams(window.location.search);
             params.set('pageNumber', page);
 
-            // Ensure we always have pageSize
             if (!params.has('pageSize')) {
                 params.set('pageSize', '@Model.PageSize');
             }
@@ -375,22 +356,18 @@
             window.location.href = '/Products?' + params.toString();
         }
 
-        // Delete product confirmation
         function deleteProduct(id) {
             currentDeleteProductId = id;
             $('#deleteModal').modal('show');
         }
 
-                // Handle the delete confirmation
         $('#confirmDeleteBtn').on('click', function() {
             const $btn = $(this);
             const originalHtml = $btn.html();
 
-            // Show loading state
             $btn.prop('disabled', true)
                 .html('<span class="spinner-border spinner-border-sm me-2"></span>Deleting...');
 
-            // Perform AJAX delete request
             $.ajax({
                 url: `/Products/Delete/${currentDeleteProductId}`,
                 type: 'POST',
@@ -398,69 +375,57 @@
                     'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
                 },
                 success: function(response) {
-                    // First, check if this went to approval
                     if (response.isApprovalRequest) {
-                        // Product deletion requires approval
                         $('#deleteModal').modal('hide');
 
-                        // Show detailed approval notification
                         showToast(
                             response.message || 'Product deletion has been submitted for approval. An administrator will review your request.',
                             'info',
                             8000
                         );
 
-                        // Add a visual indicator to the product row
+                        // Mark the row as pending and lock its buttons until the request is decided.
                         const $productRow = $(`tr:has(button[onclick="deleteProduct(${currentDeleteProductId})"])`);
                         if ($productRow.length) {
-                            // Add pending badge to the status column
-                            const $statusCell = $productRow.find('td:nth-child(5)'); // Adjust based on your table structure
+                            const $statusCell = $productRow.find('td:nth-child(5)'); // Status column
                             $statusCell.append('<span class="badge bg-warning ms-1"><i class="fas fa-clock"></i> Deletion Pending</span>');
 
-                            // Disable the action buttons
                             $productRow.find('.btn-group button').prop('disabled', true).addClass('opacity-50');
                         }
 
-                        // Optionally show a more prominent notification
                         if (response.approvalRequestId) {
                             showApprovalRequestInfo(response.approvalRequestId);
                         }
 
                     } 
                     else if (response.isSuccess !== false) {
-                        // Product was deleted successfully (direct deletion)
                         $('#deleteModal').modal('hide');
 
                         showToast('Product deleted successfully', 'success');
 
-                        // Remove the product row with animation
                         const $productRow = $(`tr:has(button[onclick="deleteProduct(${currentDeleteProductId})"])`);
                         $productRow.fadeOut(500, function() {
                             $(this).remove();
 
-                            // Check if table is now empty
                             if ($('#productsTable tbody tr').length === 0) {
-                                location.reload(); // Reload to show empty state
+                                location.reload(); // The empty state is rendered by the server
                             }
                         });
 
-                        // Update the product count if displayed
                         updateProductCount(-1);
 
                     } 
                     else {
-                        // Deletion failed
                         showToast(
                             response.message || 'Failed to delete product. Please try again.',
                             'error'
                         );
 
-                        // Keep modal open for retry
+                        // The modal stays open so the delete can be retried.
                         $btn.prop('disabled', false).html(originalHtml);
                     }
                 },
                 error: function(xhr) {
-                    // Handle different error scenarios
                     let errorMessage = 'An error occurred while deleting the product';
 
                     if (xhr.status === 401) {
@@ -476,13 +441,11 @@
 
                     showToast(errorMessage, 'error', 7000);
 
-                    // Re-enable the button for retry
                     $btn.prop('disabled', false).html(originalHtml);
                 }
             });
         });
 
-                // Helper function to show approval request details
         function showApprovalRequestInfo(requestId) {
             const infoHtml = `
                 <div class="alert alert-info alert-dismissible fade show position-fixed"
@@ -506,7 +469,6 @@
 
             $('body').append(infoHtml);
 
-            // Auto-hide after 10 seconds
             setTimeout(() => {
                 $('.alert-info[style*="position: fixed"]').fadeOut(500, function() {
                     $(this).remove();
@@ -533,14 +495,12 @@
             }
         });
 
-        // Reset when modal is hidden
         $('#deleteModal').on('hidden.bs.modal', function() {
             currentDeleteProductId = null;
             $('#confirmDeleteBtn').prop('disabled', false)
                 .html('<i class="fas fa-trash me-2"></i>Delete Product');
         });
 
-        // Double-click to edit inventory code
         $(document).on('dblclick', '.inventory-code-display', function() {
             const id = $(this).data('id');
             $(this).addClass('d-none');
@@ -548,7 +508,6 @@
             $(`.inventory-code-input[data-id="${id}"]`).focus().select();
         });
 
-        // Save inventory code
         $(document).on('click', '.save-inventory-code', function() {
             const id = $(this).data('id');
             const newCode = $(`.inventory-code-input[data-id="${id}"]`).val();
@@ -588,25 +547,22 @@
             });
         });
 
-        // Cancel inventory code edit
         $(document).on('click', '.cancel-inventory-code', function() {
             const id = $(this).data('id');
             $(`.inventory-code-display[data-id="${id}"]`).removeClass('d-none');
             $(`.inventory-code-edit[data-id="${id}"]`).addClass('d-none');
         });
 
-        // Keyboard shortcuts for inventory code editing
         $(document).on('keydown', '.inventory-code-input', function(e) {
             const id = $(this).data('id');
-            if (e.which === 13) { // Enter key
+            if (e.which === 13) { // Enter
                 e.preventDefault();
                 $(`.save-inventory-code[data-id="${id}"]`).click();
-            } else if (e.which === 27) { // Escape key
+            } else if (e.which === 27) { // Escape
                 $(`.cancel-inventory-code[data-id="${id}"]`).click();
             }
         });
 
-        // Show image modal
         function showImageModal(imageUrl, title) {
             $('#globalModalImage').attr('src', imageUrl);
             $('#globalImageModal .modal-title').text(title || 'Image Preview');
@@ -614,7 +570,7 @@
         }
     </script>
     <script>
-        // Real-time search functionality
+        // Search as you type, submitting the form once typing pauses.
         let searchTimeout;
         const searchInput = document.getElementById('searchInput');
         const searchForm = document.getElementById('searchForm');
@@ -623,7 +579,6 @@
             searchInput.addEventListener('input', function(e) {
                 clearTimeout(searchTimeout);
 
-                // Show loading indicator
                 const submitBtn = searchForm.querySelector('button[type="submit"]');
                 if (submitBtn) {
                     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Searching...';
@@ -631,11 +586,10 @@
 
                 searchTimeout = setTimeout(() => {
                     searchForm.submit();
-                }, 500); // Wait 500ms after user stops typing
+                }, 500);
             });
         }
 
-        // Update the showing text dynamically
         function updateShowingText() {
             const totalCount = @(ViewBag.TotalCount ?? 0);
             const showingStart = @(ViewBag.ShowingStart ?? 0);
@@ -651,7 +605,6 @@
             }
         }
 
-        // Call on page load
         document.addEventListener('DOMContentLoaded', updateShowingText);
     </script>
 }

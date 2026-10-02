@@ -18,17 +18,12 @@ namespace InventoryManagement.Web.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Provides the current JWT token for client-side use (SignalR, direct API calls)
-        /// SECURITY: Only returns token if user is authenticated and token is valid
-        /// Token is refreshed automatically if needed
-        /// </summary>
+        /// <summary>Gives page scripts the JWT for SignalR and direct API calls, refreshing it first if it expired.</summary>
         [HttpGet("current")]
         public async Task<IActionResult> GetCurrentToken()
         {
             try
             {
-                // This will auto-refresh if needed
                 var token = await _tokenManager.GetValidTokenAsync();
 
                 if (string.IsNullOrEmpty(token))
@@ -36,7 +31,6 @@ namespace InventoryManagement.Web.Controllers
                     return Unauthorized(new { error = "No valid token available" });
                 }
 
-                // Return minimal response - just the token
                 return Ok(new { token });
             }
             catch (Exception ex)
@@ -46,10 +40,7 @@ namespace InventoryManagement.Web.Controllers
             }
         }
 
-        /// <summary>
-        /// Validates if current token is still valid
-        /// Used for health checks
-        /// </summary>
+        /// <summary>Lets health checks see whether the session still has a usable token.</summary>
         [HttpGet("validate")]
         public async Task<IActionResult> ValidateToken()
         {

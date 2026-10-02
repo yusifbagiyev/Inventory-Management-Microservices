@@ -47,7 +47,6 @@ namespace IdentityService.Infrastructure.Services
             if (user == null || !user.IsActive)
                 throw new UnauthorizedAccessException("Invalid credentials");
 
-            // Check if account is locked
             if (await _userManager.IsLockedOutAsync(user))
             {
                 var lockoutEnd = await _userManager.GetLockoutEndDateAsync(user);
@@ -69,10 +68,9 @@ namespace IdentityService.Infrastructure.Services
             user.LastLoginAt = DateTime.Now;
             await _userManager.UpdateAsync(user);
 
-            // Reset lockout on successful login
             await _userManager.ResetAccessFailedCountAsync(user);
 
-            // Revoke old refresh tokens
+            // Signing in ends the user's other sessions.
             await RevokeAllUserRefreshTokensAsync(user.Id);
 
             return await GenerateTokenResponse(user);
@@ -94,7 +92,6 @@ namespace IdentityService.Infrastructure.Services
             if (!result.Succeeded)
                 throw new InvalidOperationException(string.Join(", ", result.Errors.Select(e => e.Description)));
 
-            // Assign default role
             var role = dto.SelectedRole ?? AllRoles.User;
             await _userManager.AddToRoleAsync(user, role);
 
@@ -105,27 +102,22 @@ namespace IdentityService.Infrastructure.Services
 
         public async Task<TokenDto> RefreshTokenAsync(RefreshTokenDto dto)
         {
-            // Validate the refresh token first - this is the primary authentication proof
+            // The refresh token alone proves who the user is. The access token is optional.
             var refreshToken = await _tokenService.GetRefreshTokenAsync(dto.RefreshToken);
             if (refreshToken == null || !refreshToken.IsActive)
                 throw new UnauthorizedAccessException("Invalid refresh token");
 
-            // Get user from the refresh token
             var user = refreshToken.User;
             if (!user.IsActive)
                 throw new UnauthorizedAccessException("User is inactive");
 
-            // If an access token was provided, we can optionally validate it for extra security
-            // But we don't require it - the refresh token alone is sufficient proof of identity
             if (!string.IsNullOrEmpty(dto.AccessToken))
             {
                 try
                 {
-                    // Try to get the user ID from the access token to verify it matches
                     var principal = _tokenService.GetPrincipalFromExpiredToken(dto.AccessToken);
                     var tokenUserId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                    // If the token has a user ID, verify it matches the refresh token's user
                     if (!string.IsNullOrEmpty(tokenUserId) && int.TryParse(tokenUserId, out int parsedUserId))
                     {
                         if (parsedUserId != user.Id)
@@ -136,22 +128,19 @@ namespace IdentityService.Infrastructure.Services
                 }
                 catch (Exception ex)
                 {
-                    // If access token validation fails, we log it but continue
-                    // The refresh token is the source of truth here
+                    // Only logged.
                     _logger?.LogWarning(ex, "Access token validation failed during refresh, but continuing with valid refresh token");
                 }
             }
             else
             {
-                // This is the session restoration scenario
                 _logger?.LogInformation("Refresh token request without access token - restoring lost session for user {UserId}", user.Id);
             }
 
-            // Generate new tokens
             var newAccessToken = await _tokenService.GenerateAccessToken(user);
             var newRefreshToken = await _tokenService.GenerateRefreshToken();
 
-            // Revoke old refresh token and create new one (token rotation for security)
+            // Rotate the refresh token on every use.
             await _tokenService.RevokeRefreshTokenAsync(dto.RefreshToken, newRefreshToken);
             await _tokenService.CreateRefreshTokenAsync(user.Id, newRefreshToken);
 
@@ -251,10 +240,8 @@ namespace IdentityService.Infrastructure.Services
             if (user == null)
                 return false;
 
-            // Soft delete by deactivating the user
             var result = await _userManager.DeleteAsync(user);
 
-            // Also revoke all refresh tokens
             await RevokeAllUserRefreshTokensAsync(userId);
 
             return result.Succeeded;
@@ -269,7 +256,6 @@ namespace IdentityService.Infrastructure.Services
             user.IsActive = !user.IsActive;
             var result = await _userManager.UpdateAsync(user);
 
-            // If user is deactivated, revoke all refresh tokens
             if (!user.IsActive)
             {
                 await RevokeAllUserRefreshTokensAsync(userId);
@@ -291,7 +277,7 @@ namespace IdentityService.Infrastructure.Services
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
 
-            // Revoke all refresh tokens after password reset
+            // A new password ends every existing session.
             if (result.Succeeded)
             {
                 await RevokeAllUserRefreshTokensAsync(userId);
@@ -308,7 +294,6 @@ namespace IdentityService.Infrastructure.Services
 
             var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
 
-            // Revoke all refresh tokens after password change
             if (result.Succeeded)
             {
                 await RevokeAllUserRefreshTokensAsync(userId);
@@ -337,10 +322,9 @@ namespace IdentityService.Infrastructure.Services
             if (!roleExists)
                 return false;
 
-            // Check if user already has this role
             var userRoles = await _userManager.GetRolesAsync(user);
             if (userRoles.Contains(roleName))
-                return true; // Already has the role
+                return true;
 
             var result = await _userManager.AddToRoleAsync(user, roleName);
             return result.Succeeded;
@@ -377,13 +361,12 @@ namespace IdentityService.Infrastructure.Services
 
         private async Task AssignRolePermissionsToUser(int userId, string roleName)
         {
-            // Get role permissions
+            // The role's permissions are copied onto the user as their own grants.
             var rolePermissions = await _context.RolePermissions
                 .Include(rp => rp.Permission)
                 .Where(rp => rp.Role.Name == roleName)
                 .ToListAsync();
 
-            // Add each permission to UserPermissions
             foreach (var rolePermission in rolePermissions)
             {
                 var userPermission = new UserPermission
@@ -560,7 +543,6 @@ namespace IdentityService.Infrastructure.Services
             var accessToken = await _tokenService.GenerateAccessToken(user);
             var refreshToken = await _tokenService.GenerateRefreshToken();
 
-            // Save the refresh token to database
             await _tokenService.CreateRefreshTokenAsync(user.Id, refreshToken);
 
             var userDto = await GetUserAsync(user.Id);

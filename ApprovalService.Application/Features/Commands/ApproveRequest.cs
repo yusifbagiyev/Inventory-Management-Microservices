@@ -47,14 +47,14 @@ namespace ApprovalService.Application.Features.Commands
                 await _repository.UpdateAsync(approvalRequest, cancellationToken);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                // Execute the action
+                // The action runs as the approver, not as the requester.
                 try
                 {
                     var executed = await _actionExecutor.ExecuteAsync(
                         approvalRequest.RequestType,
                         approvalRequest.ActionData,
-                        request.UserId,      // Pass the admin's user ID
-                        request.UserName,    // Pass the admin's user name
+                        request.UserId,
+                        request.UserName,
                         cancellationToken);
 
                     if (executed)
@@ -81,7 +81,6 @@ namespace ApprovalService.Application.Features.Commands
 
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                // Notify requester
                 var evt = new ApprovalRequestProcessedEvent
                 {
                     RequestId = approvalRequest.Id,

@@ -18,13 +18,11 @@ namespace ProductService.Application
             services.AddValidatorsFromAssembly(assembly);
             services.AddMediatR(config => config.RegisterServicesFromAssembly(assembly));
 
-            // Add services
             services.AddScoped<IImageService, ImageService>();
             services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<IProductManagementService, ProductManagementService>();
 
 
-            // Add validation behavior
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
             return services;

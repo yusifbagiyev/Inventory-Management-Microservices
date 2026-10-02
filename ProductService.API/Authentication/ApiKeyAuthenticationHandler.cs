@@ -22,7 +22,7 @@ namespace ProductService.API.Authentication
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            // Check if the API key is present in the request headers
+            // No header means this is not an API key call, let the other schemes try.
             if (!Request.Headers.TryGetValue(ApiKeyHeaderName, out var apiKeyHeaderValues))
             {
                 return AuthenticateResult.NoResult();
@@ -35,7 +35,6 @@ namespace ProductService.API.Authentication
                 return AuthenticateResult.NoResult();
             }
 
-            // Get the configured API keys from appsettings
             var validApiKeys = _configuration.GetSection("ApiKeys").Get<Dictionary<string, ApiKeyConfig>>();
 
             if (validApiKeys == null || !validApiKeys.TryGetValue(providedApiKey, out var apiKeyConfig))
@@ -43,7 +42,6 @@ namespace ProductService.API.Authentication
                 return AuthenticateResult.Fail("Invalid API Key");
             }
 
-            // Create claims for the authenticated service
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, apiKeyConfig.ServiceName),
@@ -51,7 +49,6 @@ namespace ProductService.API.Authentication
                 new Claim("ServiceType", "Internal"),
             };
 
-            // Add any additional permissions configured for this API key
             foreach (var permission in apiKeyConfig.Permissions)
             {
                 claims.Add(new Claim("permission", permission));

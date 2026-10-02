@@ -47,7 +47,7 @@ namespace InventoryManagement.Web.Models.ViewModels
         [MaxLength(500)]
         public string? Notes { get; set; }
 
-        // For dropdowns
+        // Dropdown options for the form
         public List<SelectListItem>? Products { get; set; }
         public List<SelectListItem>? Departments { get; set; }
     }

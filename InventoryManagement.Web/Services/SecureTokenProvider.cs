@@ -18,7 +18,7 @@ namespace InventoryManagement.Web.Services
             _logger = logger;
         }
 
-        // This method provides tokens ONLY for SignalR, with strict validation
+        // Meant only for the SignalR connection. Every other call sends the token server side.
         public async Task<string?> GetTokenForSignalRAsync()
         {
             var context = _httpContextAccessor.HttpContext;
@@ -28,7 +28,6 @@ namespace InventoryManagement.Web.Services
                 return null;
             }
 
-            // Get a valid token through the secure token manager
             var token = await _tokenManager.GetValidTokenAsync();
 
             if (string.IsNullOrEmpty(token))
@@ -46,13 +45,12 @@ namespace InventoryManagement.Web.Services
             var context = _httpContextAccessor.HttpContext;
             if (context == null) return false;
 
-            // Check if user is authenticated
             if (!(context.User?.Identity?.IsAuthenticated ?? false))
             {
                 return false;
             }
 
-            // Validate that we can get a valid token
+            // The cookie can outlive the API token, so the session counts only if a token is still available.
             var token = await _tokenManager.GetValidTokenAsync();
             return !string.IsNullOrEmpty(token);
         }

@@ -102,13 +102,12 @@
                     return ParseRouteDeleteData(data);
 
                 default:
-                    // For unknown types, format the JSON nicely
                     return $"<pre class='mb-0' style='max-height: 400px; overflow-y: auto;'>{FormatJson(data)}</pre>";
             }
         }
         catch (Exception ex)
         {
-            // If parsing fails, try to format the raw JSON
+            // The data does not fit the typed view, so show the raw JSON instead.
             try
             {
                 var parsed = Newtonsoft.Json.Linq.JToken.Parse(actionData);
@@ -126,7 +125,6 @@
         var productData = data.ProductData ?? data;
         var html = new System.Text.StringBuilder();
 
-        // Basic Information
         html.AppendLine("<div class='mb-3'>");
         html.AppendLine("<h6 class='text-primary'>Product Information</h6>");
         html.AppendLine($"<strong>Inventory Code:</strong> {productData.inventoryCode ?? productData.InventoryCode}<br/>");
@@ -135,7 +133,6 @@
         html.AppendLine($"<strong>Worker:</strong> {productData.worker ?? productData.Worker ?? "Not assigned"}<br/>");
         html.AppendLine("</div>");
 
-        // Category & Department
         html.AppendLine("<div class='mb-3'>");
         html.AppendLine("<h6 class='text-primary'>Location</h6>");
         var categoryName = productData.categoryName ?? productData.CategoryName ?? $"Category #{productData.categoryId ?? productData.CategoryId}";
@@ -144,7 +141,6 @@
         html.AppendLine($"<strong>Department:</strong> {departmentName}<br/>");
         html.AppendLine("</div>");
 
-        // Status Information
         html.AppendLine("<div class='mb-3'>");
         html.AppendLine("<h6 class='text-primary'>Status</h6>");
         bool isWorking = GetBoolValue(productData, "isWorking", "IsWorking", true);
@@ -156,7 +152,6 @@
         html.AppendLine($"<strong>Item Condition:</strong> {(isNewItem ? "<span class='badge bg-info'>New</span>" : "<span class='badge bg-warning'>Used</span>")}<br/>");
         html.AppendLine("</div>");
 
-        // Description & Notes
         var description = productData.description ?? productData.Description;
         if (!string.IsNullOrEmpty(description?.ToString()))
         {
@@ -166,7 +161,6 @@
             html.AppendLine("</div>");
         }
 
-        // Image Information
         if (productData.imageData != null || productData.imageFileName != null)
         {
             html.AppendLine("<div class='alert alert-info mb-0'>");
@@ -184,10 +178,8 @@
 
         html.AppendLine($"<strong>Product:</strong> Inventory Code {inventoryCode}<br/>");
 
-        // Parse UpdateData
         var updateData = data.UpdateData ?? data.updateData;
 
-        // Show changes summary if available
         var changes = data.Changes;
         if (changes != null)
         {
@@ -227,7 +219,6 @@
     {
         var html = new System.Text.StringBuilder();
 
-        // Product Information
         html.AppendLine("<div class='mb-3'>");
         html.AppendLine("<h6 class='text-primary'>Product Information</h6>");
         html.AppendLine($"<strong>Inventory Code:</strong> {data.inventoryCode ?? data.InventoryCode ?? "N/A"}<br/>");
@@ -235,7 +226,6 @@
         html.AppendLine($"<strong>Vendor:</strong> {data.productVendor ?? data.ProductVendor ?? "N/A"}<br/>");
         html.AppendLine("</div>");
 
-        // Transfer Details
         html.AppendLine("<div class='mb-3'>");
         html.AppendLine("<h6 class='text-primary'>Transfer Details</h6>");
         html.AppendLine("<table class='table table-sm'>");
@@ -252,7 +242,6 @@
         html.AppendLine("</table>");
         html.AppendLine("</div>");
 
-        // Notes
         var notes = data.notes ?? data.Notes;
         if (notes != null && notes.ToString() != "{}" && !string.IsNullOrWhiteSpace(notes.ToString()))
         {
@@ -262,7 +251,6 @@
             html.AppendLine("</div>");
         }
 
-        // Image
         if (data.imageData != null || data.imageFileName != null)
         {
             html.AppendLine("<div class='alert alert-info mb-0'>");
@@ -277,7 +265,7 @@
     {
         try
         {
-            // Try camelCase first
+            // Stored action data comes in both camelCase and PascalCase.
             if (obj[camelCase] != null)
             {
                 return (bool)obj[camelCase];
@@ -287,7 +275,6 @@
 
         try
         {
-            // Try PascalCase
             if (obj[pascalCase] != null)
             {
                 return (bool)obj[pascalCase];
@@ -307,7 +294,6 @@
     {
         var html = new System.Text.StringBuilder();
 
-        // Route Information
         html.AppendLine("<div class='mb-3'>");
         html.AppendLine("<h6 class='text-primary'>Route Information</h6>");
 
@@ -318,7 +304,6 @@
         html.AppendLine($"<strong>Route ID:</strong> #{routeId}<br/>");
         html.AppendLine($"<strong>Product:</strong> {inventoryCode} - {model}<br/>");
 
-        // Show transfer route if available
         var fromDept = data.FromDepartmentName ?? data.fromDepartmentName;
         var toDept = data.ToDepartmentName ?? data.toDepartmentName;
         if (fromDept != null && toDept != null)
@@ -328,14 +313,12 @@
 
         html.AppendLine("</div>");
 
-        // Update Details
         var updateData = data.UpdateData ?? data.updateData;
         if (updateData != null)
         {
             html.AppendLine("<div class='mb-3'>");
             html.AppendLine("<h6 class='text-primary'>Updates to Apply</h6>");
 
-            // Check for notes update
             var notes = updateData.notes ?? updateData.Notes;
             if (notes != null && notes.ToString() != "{}")
             {
@@ -343,7 +326,6 @@
                 html.AppendLine($"<div class='bg-light p-2 rounded'>{notes}</div>");
             }
 
-            // Check for image update
             if (updateData.imageData != null || updateData.imageFileName != null)
             {
                 var fileName = updateData.imageFileName ?? updateData.ImageFileName ?? "route_image.jpg";
@@ -352,7 +334,6 @@
                 html.AppendLine("</div>");
             }
 
-            // Show changes summary if available
             var changesSummary = updateData.changesSummary ?? updateData.ChangesSummary;
             if (changesSummary != null && changesSummary.ToString() != "")
             {
@@ -362,7 +343,6 @@
             html.AppendLine("</div>");
         }
 
-        // Show the Changes field if it exists (from the approval request)
         var changes = data.Changes ?? data.changes;
         if (changes != null && changes.ToString() != "")
         {
@@ -378,12 +358,10 @@
     {
         var html = new System.Text.StringBuilder();
 
-        // Warning message
         html.AppendLine("<div class='alert alert-danger'>");
         html.AppendLine("<i class='fas fa-exclamation-triangle'></i> <strong>Route to be Deleted</strong>");
         html.AppendLine("</div>");
 
-        // Route details
         html.AppendLine("<div class='mb-3'>");
         html.AppendLine("<h6 class='text-primary'>Route Information</h6>");
 
@@ -417,7 +395,6 @@
         html.AppendLine($"<strong>Status:</strong> {(isCompleted ? "<span class='badge bg-success'>Completed</span>" : "<span class='badge bg-warning'>Pending</span>")}<br/>");
         html.AppendLine("</div>");
 
-        // Deletion reason if provided
         var deleteReason = data.DeleteReason ?? data.deleteReason ?? data.Reason ?? data.reason;
         if (deleteReason != null && deleteReason.ToString() != "")
         {
@@ -427,7 +404,6 @@
             html.AppendLine("</div>");
         }
 
-        // Warning for completed routes
         if (isCompleted)
         {
             html.AppendLine("<div class='alert alert-warning mb-0'>");

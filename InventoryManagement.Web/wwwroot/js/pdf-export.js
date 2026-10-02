@@ -5,33 +5,28 @@
         return;
     }
 
-    // Clone and prepare table
     const tableClone = table.cloneNode(true);
 
-    // Find headers to remove (Image and Actions columns)
+    // The Image and Actions columns are left out of the PDF.
     const headers = tableClone.querySelectorAll('th');
-    headers[0].remove();  // Remove Image header
-    headers[headers.length - 1].remove();  // Actions column
+    headers[0].remove();
+    headers[headers.length - 1].remove();
 
-    // Process each row
     tableClone.querySelectorAll('tbody tr').forEach(row => {
         const cells = row.querySelectorAll('td');
 
-        // Remove image and actions cells
         cells[0].remove();
         cells[cells.length - 1].remove();
 
-        // Clean up the Code column (now first column)
-        const codeCell = cells[1]; // After removing image, code is at index 0
+        // The cells list is static, so its indexes still match the original columns.
+        const codeCell = cells[1];
         if (codeCell) {
             const badge = codeCell.querySelector('.badge');
             if (badge) {
-                // Keep just the code number with better formatting
                 codeCell.innerHTML = `<strong style="color: #1e40af;">${badge.textContent.trim()}</strong>`;
             }
         }
 
-        // Clean up Product Details column to include category
         const detailsCell = cells[2];
         if (detailsCell) {
             const model = detailsCell.querySelector('strong')?.textContent || '';
@@ -46,7 +41,7 @@
         }
     });
 
-    tableClone.querySelectorAll('td:nth-child(4)').forEach(cell => { // Assuming Location is 4th column
+    tableClone.querySelectorAll('td:nth-child(4)').forEach(cell => { // Location
         const deptText = cell.textContent.trim();
         const parts = deptText.split('(');
 
@@ -61,8 +56,8 @@
         }
     });
 
-    // Process Status column (Working + Active in one column)
-    tableClone.querySelectorAll('td:nth-child(5)').forEach(cell => { // Assuming Status is 5th column
+    // Status shows the working and active badges one per line.
+    tableClone.querySelectorAll('td:nth-child(5)').forEach(cell => {
         const badges = cell.querySelectorAll('.badge');
         let statusHTML = '';
 
@@ -105,31 +100,25 @@ function exportRoutesToPDF() {
         return;
     }
 
-    // Clone the table to modify it
     const tableClone = table.cloneNode(true);
 
-    // Find all headers to determine indices to remove
     const headers = tableClone.querySelectorAll('th');
     const indicesToRemove = [];
     const headersToKeep = ['Date', 'Type', 'Product', 'From', 'To', 'Status'];
 
     headers.forEach((header, index) => {
         const headerText = header.textContent.trim();
-        // Keep only specified columns
         if (!headersToKeep.some(keep => headerText.includes(keep))) {
             indicesToRemove.push(index);
         }
     });
 
-    // Sort indices in descending order for safe removal
     indicesToRemove.sort((a, b) => b - a);
 
-    // Remove headers
     indicesToRemove.forEach(index => {
         headers[index].remove();
     });
 
-    // Remove corresponding cells in rows
     tableClone.querySelectorAll('tr').forEach(row => {
         const cells = row.querySelectorAll('td');
         indicesToRemove.forEach(index => {
@@ -137,8 +126,7 @@ function exportRoutesToPDF() {
         });
     });
 
-    // Clean up columns
-    // After removal, the columns are: Date, Type, Product, From, To, Status
+    // The columns left are Date, Type, Product, From, To and Status.
     tableClone.querySelectorAll('td:nth-child(3)').forEach(cell => {
         const badge = cell.querySelector('.badge');
         const vendorModel = cell.textContent.replace(badge?.textContent || '', '').trim();
@@ -149,7 +137,7 @@ function exportRoutesToPDF() {
         `;
     });
 
-    // Clean up From column (now 4th column)
+    // From
     tableClone.querySelectorAll('td:nth-child(4)').forEach(cell => {
         const div = cell.querySelector('div');
         const small = cell.querySelector('small');
@@ -159,7 +147,7 @@ function exportRoutesToPDF() {
         `;
     });
 
-    // Clean up To column (now 5th column)
+    // To
     tableClone.querySelectorAll('td:nth-child(5)').forEach(cell => {
         const div = cell.querySelector('div');
         const small = cell.querySelector('small');
@@ -169,18 +157,15 @@ function exportRoutesToPDF() {
         `;
     });
 
-    // Clean up Status column (now 6th column)
+    // Status keeps only its badge text.
     tableClone.querySelectorAll('td:nth-child(6)').forEach(cell => {
-        // Remove icons and extra elements
         cell.querySelectorAll('i').forEach(icon => icon.remove());
         cell.querySelectorAll('br').forEach(br => br.remove());
         cell.querySelectorAll('small').forEach(sm => sm.remove());
     });
 
-    // Remove any remaining images
     tableClone.querySelectorAll('img').forEach(img => img.remove());
 
-    // Set a fixed ID for the table in the PDF
     tableClone.id = 'routesPdfTable';
 
     const customStyles = `
@@ -202,7 +187,6 @@ function exportRoutesToPDF() {
 function exportToPDF(tableHTML, filename, title, customStyles = '') {
     const printWindow = window.open('', '_blank');
 
-    // Modern UI styles for portrait mode
     const styles = `
         <style>
             @page { 
@@ -304,12 +288,10 @@ function exportToPDF(tableHTML, filename, title, customStyles = '') {
         minute: '2-digit'
     });
 
-    // Count rows
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = tableHTML;
     const rowCount = tempDiv.querySelectorAll('tbody tr').length;
 
-    // Build the document
     const documentContent = `
         <!DOCTYPE html>
         <html>
@@ -336,11 +318,10 @@ function exportToPDF(tableHTML, filename, title, customStyles = '') {
         </html>
     `;
 
-    // Write content and trigger print
     printWindow.document.write(documentContent);
     printWindow.document.close();
 
-    // Wait for content to load then print
+    // Print a moment after load so the layout has settled.
     printWindow.onload = function () {
         setTimeout(() => {
             printWindow.print();
@@ -358,21 +339,16 @@ function exportTimelineToPDF() {
         return;
     }
 
-    // Clone the timeline to modify it
     const timelineClone = timeline.cloneNode(true);
 
-    // Remove images
     timelineClone.querySelectorAll('img').forEach(img => img.remove());
 
-    // Remove action buttons
     timelineClone.querySelectorAll('.btn').forEach(btn => btn.remove());
 
-    // Simplify timeline items
     timelineClone.querySelectorAll('.timeline-item').forEach(item => {
         const marker = item.querySelector('.timeline-marker');
         const content = item.querySelector('.timeline-content');
 
-        // Create simplified HTML
         item.innerHTML = `
             <div style="display: flex; margin-bottom: 15px;">
                 ${marker.outerHTML}
@@ -383,7 +359,6 @@ function exportTimelineToPDF() {
         `;
     });
 
-    // Generate HTML for PDF
     const htmlContent = `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
             <h1 style="text-align: center; color: #1e40af; margin-bottom: 10px;">
@@ -466,7 +441,6 @@ function exportTimelineToPDF() {
     `);
     printWindow.document.close();
 
-    // Wait for content to load then print
     printWindow.onload = function () {
         setTimeout(() => {
             printWindow.print();
@@ -484,22 +458,21 @@ function exportDepartmentsToPDF() {
         return;
     }
 
-    // Clone the table to modify it
     const tableClone = table.cloneNode(true);
     tableClone.id = 'departmentsPdfTable';
 
-    // Remove actions column (last column)
+    // The last column holds the action buttons.
     const headers = tableClone.querySelectorAll('th');
-    headers[headers.length - 1].remove();  // Remove Actions header
+    headers[headers.length - 1].remove();
 
     tableClone.querySelectorAll('tr').forEach(row => {
         const cells = row.querySelectorAll('td');
         if (cells.length > 0) {
-            cells[cells.length - 1].remove();  // Remove Actions cell
+            cells[cells.length - 1].remove();
         }
     });
 
-    // Clean up Department column (first column) - remove icon
+    // Department name without its icon.
     tableClone.querySelectorAll('td:first-child').forEach(cell => {
         const textDiv = cell.querySelector('.fw-semibold');
         if (textDiv) {
@@ -507,7 +480,7 @@ function exportDepartmentsToPDF() {
         }
     });
 
-    // Clean up Department Head column (second column) - simplify text
+    // Department head
     tableClone.querySelectorAll('td:nth-child(2)').forEach(cell => {
         const text = cell.textContent.trim();
         if (text === 'Not assigned') {
@@ -517,21 +490,18 @@ function exportDepartmentsToPDF() {
         }
     });
 
-    // Clean up Description column (third column) - simplify text
+    // Description
     tableClone.querySelectorAll('td:nth-child(3)').forEach(cell => {
         const text = cell.textContent.trim();
         if (text === 'No description provided') {
             cell.innerHTML = '<span style="color: #999; font-style: italic;">None</span>';
         } else {
-            // Keep the description as is, but remove any extra whitespace
             cell.innerHTML = text;
         }
     });
 
-    // Remove icons from status column
     tableClone.querySelectorAll('.badge i').forEach(icon => icon.remove());
 
-    // Set column widths for proper PDF layout
     const customStyles = `
         #departmentsPdfTable {
             table-layout: fixed;
@@ -556,22 +526,21 @@ function exportCategoriesToPDF() {
         return;
     }
 
-    // Clone the table to modify it
     const tableClone = table.cloneNode(true);
     tableClone.id = 'categoriesPdfTable';
 
-    // Remove actions column
+    // The last column holds the action buttons.
     const headers = tableClone.querySelectorAll('th');
-    headers[headers.length - 1].remove();  // Remove Actions header
+    headers[headers.length - 1].remove();
 
     tableClone.querySelectorAll('tr').forEach(row => {
         const cells = row.querySelectorAll('td');
         if (cells.length > 0) {
-            cells[cells.length - 1].remove();  // Remove Actions cell
+            cells[cells.length - 1].remove();
         }
     });
 
-    // Clean up content
+    // Category name without its icon.
     tableClone.querySelectorAll('td:first-child').forEach(cell => {
         const textDiv = cell.querySelector('div:last-child');
         if (textDiv) {
@@ -579,10 +548,8 @@ function exportCategoriesToPDF() {
         }
     });
 
-    // Remove icons from status column
     tableClone.querySelectorAll('.badge i').forEach(icon => icon.remove());
 
-    // Set column widths
     const customStyles = `
         #categoriesPdfTable {
             table-layout: fixed;

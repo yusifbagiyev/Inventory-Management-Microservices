@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: inventory_postgres
@@ -22,7 +21,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # RabbitMQ Message Broker
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: inventory_rabbitmq
@@ -43,7 +41,6 @@ services:
       timeout: 10s
       retries: 5
 
-  # Identity Service with Seq logging
   identity-service:
     build:
       context: ./src
@@ -65,12 +62,12 @@ services:
       - backend
     restart: always
 
-  # Product Service with Seq logging and fixed file permissions
   product-service:
     build:
       context: ./src
       dockerfile: ProductService.API/Dockerfile
     container_name: inventory_product_service
+    # Root, so it can write to the bind-mounted image folder.
     user: "root"
     environment:
       - TZ=${TZ:-UTC}
@@ -96,12 +93,12 @@ services:
       - backend
     restart: always
 
-  # Route Service with Seq logging
   route-service:
     build:
       context: ./src
       dockerfile: RouteService.API/Dockerfile
     container_name: inventory_route_service
+    # Root, so it can write to the bind-mounted image folder.
     user: "root"
     environment:
       - TZ=${TZ:-UTC}
@@ -127,7 +124,6 @@ services:
       - backend
     restart: always
 
-  # Approval Service with Seq logging
   approval-service:
     build:
       context: ./src
@@ -145,6 +141,7 @@ services:
       - Jwt__Key=${JWT_SECRET_KEY}
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=${JWT_AUDIENCE}
+      # Approved actions are run through the gateway, not by calling the services directly.
       - Services__ProductService=http://api-gateway
       - Services__RouteService=http://api-gateway
     depends_on:
@@ -155,7 +152,6 @@ services:
       - backend
     restart: always
 
-  # Notification Service with Seq logging
   notification-service:
     build:
       context: ./src
@@ -187,7 +183,6 @@ services:
       - backend
     restart: always
 
-  # API Gateway with Seq logging
   api-gateway:
     build:
       context: ./src/ApiGateway
@@ -210,7 +205,6 @@ services:
       - frontend
     restart: always
 
-  # Web Application with enhanced Seq logging
   web:
     build:
       context: ./src
@@ -233,7 +227,6 @@ services:
     volumes:
       - ./logs/web:/app/logs
 
-  # Seq - Centralized logging system
   seq:
     image: datalust/seq:latest
     container_name: inventory_seq
@@ -257,7 +250,6 @@ services:
       retries: 10
       start_period: 120s
       
-  # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
     container_name: inventory_nginx

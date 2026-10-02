@@ -65,7 +65,6 @@ namespace RouteService.Application.Features.Routes.Commands
                             continue;
                         }
 
-                        // Delete image if exists
                         if (!string.IsNullOrEmpty(route.ImageUrl))
                         {
                             await _imageService.DeleteImageAsync(route.ImageUrl);

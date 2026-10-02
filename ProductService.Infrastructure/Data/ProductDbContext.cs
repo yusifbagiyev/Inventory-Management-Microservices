@@ -58,7 +58,6 @@ namespace ProductService.Infrastructure.Data
 
         protected void SeedData(ModelBuilder modelBuilder)
         {
-            //Seed Categories
             modelBuilder.Entity<Category>().HasData(
                 new { Id = 1, Name = "Electronics", Description = "Electronic devices and equipment", IsActive = true, CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = (DateTime?)null },
                 new { Id = 2, Name = "Furniture", Description = "Office and warehouse furniture", IsActive = true, CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = (DateTime?)null },
@@ -67,7 +66,6 @@ namespace ProductService.Infrastructure.Data
                 new { Id = 5, Name = "Safety Equipment", Description = "Personal protective equipment", IsActive = true, CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = (DateTime?)null }
             );
 
-            // Seed Departments
             modelBuilder.Entity<Department>().HasData(
                 new { Id = 1, Name = "Warehouse A", Description = "Main storage warehouse", DepartmentHead = "John Smith", IsActive = true, CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = (DateTime?)null },
                 new { Id = 2, Name = "Warehouse B", Description = "Secondary storage facility", DepartmentHead = "Sarah Johnson", IsActive = true, CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = (DateTime?)null },
@@ -76,7 +74,6 @@ namespace ProductService.Infrastructure.Data
                 new { Id = 5, Name = "Maintenance", Description = "Equipment maintenance department", DepartmentHead = "Emily Davis", IsActive = true, CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = (DateTime?)null }
             );
 
-            // Seed Products
             modelBuilder.Entity<Product>().HasData(
                 new
                 {

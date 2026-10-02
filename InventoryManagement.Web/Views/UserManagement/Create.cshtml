@@ -192,7 +192,7 @@
             }
         }
 
-        // Auto-generate username based on first and last name
+        // Suggest first.last as the username, but never overwrite one that was typed.
         document.getElementById('FirstName').addEventListener('input', generateUsername);
         document.getElementById('LastName').addEventListener('input', generateUsername);
 
@@ -206,7 +206,6 @@
             }
         }
 
-        // Form validation
         document.querySelector('form').addEventListener('submit', function(e) {
             const password = document.getElementById('Password').value;
             const confirmPassword = document.getElementById('ConfirmPassword').value;

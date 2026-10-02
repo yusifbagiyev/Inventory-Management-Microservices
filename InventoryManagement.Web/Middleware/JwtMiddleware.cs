@@ -19,14 +19,13 @@ namespace InventoryManagement.Web.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // Skip for static files and certain paths
             if (IsStaticFile(context) || IsAuthPage(context))
             {
                 await _next(context);
                 return;
             }
 
-            // NOW the user should be authenticated (because UseAuthentication ran first)
+            // Relies on UseAuthentication running before this middleware.
             if (context.User?.Identity?.IsAuthenticated == true)
             {
                 using var scope = context.RequestServices.CreateScope();
@@ -34,15 +33,13 @@ namespace InventoryManagement.Web.Middleware
 
                 try
                 {
-                    // Try to get a valid token (this will auto-refresh if needed)
                     var token = await tokenManager.GetValidTokenAsync();
 
                     if (!string.IsNullOrEmpty(token))
                     {
-                        // Store token in HttpContext.Items for use by ApiService
+                        // ApiService picks the token up from here.
                         context.Items["JwtToken"] = token;
 
-                        // Update last activity
                         context.Session.SetString("LastActivity", DateTime.Now.ToString("o"));
 
                         _logger.LogDebug("JWT token available for request to {Path}", context.Request.Path);
@@ -52,8 +49,7 @@ namespace InventoryManagement.Web.Middleware
                         _logger.LogWarning("Could not obtain valid JWT token for authenticated user {User}",
                             context.User.Identity.Name);
 
-                        // User is authenticated (has valid cookie) but we can't get a JWT token
-                        // This might mean the refresh token expired
+                        // The cookie is still valid, so most likely the refresh token expired.
                         await HandleTokenFailure(context);
                         return;
                     }
@@ -77,7 +73,6 @@ namespace InventoryManagement.Web.Middleware
 
         private async Task HandleTokenFailure(HttpContext context)
         {
-            // Clear authentication and redirect to login
             await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             context.Session.Clear();
 

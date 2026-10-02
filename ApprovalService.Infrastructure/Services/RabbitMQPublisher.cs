@@ -43,7 +43,6 @@ namespace ApprovalService.Infrastructure.Services
                 UserName = username,
                 Password = password,
                 Port = port,
-                // Add connection retry logic
                 AutomaticRecoveryEnabled = true,
                 NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
             };

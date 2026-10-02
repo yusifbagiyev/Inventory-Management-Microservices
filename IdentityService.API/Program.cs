@@ -34,7 +34,6 @@ builder.Host.UseSerilog();
 
 Log.Information("Starting IdentityService");
 
-// Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -46,7 +45,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "API for managing user authentication and authorization"
     });
 
-    //Add JWT Authentication support
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -90,16 +88,16 @@ builder.Services.AddRateLimiter(options =>
     {
         var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
 
-        // Get the real client IP from X-Forwarded-For header (set by nginx)
+        // Behind nginx the client address only arrives in X-Forwarded-For.
         var forwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();
         string clientIp;
 
         if (!string.IsNullOrEmpty(forwardedFor))
         {
-            // Take the first IP in the chain (the real client)
+            // The first address in the chain is the client.
             clientIp = forwardedFor.Split(',')[0].Trim();
 
-            // Remove IPv6 prefix if present
+            // Strip the IPv4-mapped IPv6 prefix.
             if (clientIp.StartsWith("::ffff:"))
             {
                 clientIp = clientIp.Substring(7);
@@ -109,7 +107,7 @@ builder.Services.AddRateLimiter(options =>
         }
         else
         {
-            // Fallback to remote IP (should not happen in production with nginx)
+            // Only happens when the service is called without nginx in front.
             clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             logger.LogWarning("No X-Forwarded-For header found, using RemoteIP: {ClientIp}", clientIp);
         }
@@ -156,7 +154,6 @@ builder.Services.AddRateLimiter(options =>
     };
 });
 
-//Add CORS policy
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -168,7 +165,6 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Database
 builder.Services.AddDbContext<IdentityDbContext>(options =>
 { 
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -186,28 +182,23 @@ builder.Services.AddDbContext<IdentityDbContext>(options =>
 ServiceLifetime.Scoped);
 
 
-// Identity
 builder.Services.AddIdentity<User, Role>(options =>
 {
-    // Password requirements
     options.Password.RequireDigit = true;
     options.Password.RequiredLength = 6;
     options.Password.RequireNonAlphanumeric = false;
     options.User.RequireUniqueEmail = true;
 
-    // Lockout settings
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
 
-    // Sign-in settings
     options.SignIn.RequireConfirmedAccount = false;
     options.SignIn.RequireConfirmedEmail = false;
 })
 .AddEntityFrameworkStores<IdentityDbContext>()
 .AddDefaultTokenProviders();
 
-// JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(options =>
 {
@@ -228,13 +219,11 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Services
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 
-// Configure pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -244,8 +233,9 @@ if (app.Environment.IsDevelopment())
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
-    KnownNetworks = { }, // Clear defaults
-    KnownProxies = { },  // Clear defaults
+    // Empty lists mean any proxy is trusted.
+    KnownNetworks = { },
+    KnownProxies = { },
     ForwardLimit = null,
     RequireHeaderSymmetry = false,
     ForwardedForHeaderName = "X-Forwarded-For"
@@ -260,7 +250,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Ensure database is created and seeded
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();

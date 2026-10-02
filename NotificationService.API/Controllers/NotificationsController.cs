@@ -98,7 +98,6 @@ namespace NotificationService.API.Controllers
                 if (notification == null)
                     return NotFound(new { message = "Notification not found" });
 
-                // Verify the notification belongs to the user
                 if (notification.UserId != userId)
                     return Forbid();
 

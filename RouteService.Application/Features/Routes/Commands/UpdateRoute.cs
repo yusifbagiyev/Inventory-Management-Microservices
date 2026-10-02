@@ -49,13 +49,11 @@ namespace RouteService.Application.Features.Routes.Commands
                 await _unitOfWork.BeginTransactionAsync(cancellationToken);
                 try
                 {
-                    // Update notes if provided
                     if (!string.IsNullOrEmpty(dto.ToWorker) || !string.IsNullOrEmpty(dto.Notes))
                     {
                         route.UpdateExistingRoute(dto.ToWorker,dto.Notes);
                     }
 
-                    // Update image if provided
                     if (dto.ImageFile != null && dto.ImageFile.Length > 0)
                     {
                         using var stream = dto.ImageFile.OpenReadStream();
@@ -71,7 +69,7 @@ namespace RouteService.Application.Features.Routes.Commands
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
                     await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
-                    // Delete old image after successful update
+                    // Only after the commit, so a failed update keeps the old image.
                     if (!string.IsNullOrEmpty(oldImageUrl) && !string.IsNullOrEmpty(newImageUrl))
                     {
                         await _imageService.DeleteImageAsync(oldImageUrl);
@@ -81,7 +79,6 @@ namespace RouteService.Application.Features.Routes.Commands
                 {
                     await _unitOfWork.RollbackTransactionAsync(cancellationToken);
 
-                    // Delete new image if update failed
                     if (!string.IsNullOrEmpty(newImageUrl))
                     {
                         await _imageService.DeleteImageAsync(newImageUrl);

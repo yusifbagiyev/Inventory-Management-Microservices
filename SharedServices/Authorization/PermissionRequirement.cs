@@ -16,14 +16,11 @@ namespace SharedServices.Authorization
             AuthorizationHandlerContext context, 
             PermissionRequirement requirement)
         {
-            // Check if user is authenticated
             if (!context.User.Identity?.IsAuthenticated ?? true)
             {
                 return Task.CompletedTask;
             }
 
-            // Check for the permission claim - this is the key fix
-            // The claim type should be "permission" (lowercase) to match what's in your JWT
             var hasPermission = context.User.Claims.Any(c =>
                 c.Type.Equals("permission", StringComparison.OrdinalIgnoreCase) &&
                 c.Value.Equals(requirement.Permission, StringComparison.OrdinalIgnoreCase));
@@ -33,7 +30,7 @@ namespace SharedServices.Authorization
                 context.Succeed(requirement);
             }
 
-            // Also check if user is in Admin role (Admins bypass permission checks)
+            // Admins pass every permission check.
             else if (context.User.IsInRole("Admin"))
             {
                 context.Succeed(requirement);

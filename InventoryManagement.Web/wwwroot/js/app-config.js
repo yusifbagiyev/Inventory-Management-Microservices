@@ -1,6 +1,4 @@
-﻿// InventoryManagement.Web/wwwroot/js/app-config.js
-
-window.AppConfig = (function () {
+﻿window.AppConfig = (function () {
     'use strict';
 
     const hostname = window.location.hostname;

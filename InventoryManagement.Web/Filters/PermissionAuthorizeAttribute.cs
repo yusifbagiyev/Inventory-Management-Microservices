@@ -24,12 +24,10 @@ namespace InventoryManagement.Web.Filters
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            // First check if user is authenticated at all
             var user = context.HttpContext.User;
 
             if(user == null || !user?.Identity?.IsAuthenticated == true)
             {
-                // Not authenticated -redirect to login
                 context.Result = new RedirectToActionResult("Login", "Account", new
                 {
                     returnUrl = context.HttpContext.Request.Path
@@ -39,7 +37,6 @@ namespace InventoryManagement.Web.Filters
 
             if(user!= null)
             {
-                // Check if user has the required permission (or alternate permission)
                 bool hasPermission = user.HasPermission(_permission);
 
                 if (!hasPermission && !string.IsNullOrEmpty(_alternatePermission))
@@ -49,11 +46,9 @@ namespace InventoryManagement.Web.Filters
 
                 if (!hasPermission)
                 {
-                    // User is authenticated but lacks permission - show access denied
                     context.Result = new RedirectToActionResult("AccessDenied", "Account", null);
                     return;
                 }
-                // User has permission - allow the request to proceed
             }
         }
     }

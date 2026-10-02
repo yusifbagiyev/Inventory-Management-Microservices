@@ -21,7 +21,7 @@
             using var cts=new CancellationTokenSource(_timeout);
             var originalCancellationToken = context.RequestAborted;
 
-            // Link the timeout with the request cancellation token
+            // Cancel on whichever comes first, the timeout or the client going away.
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                 cts.Token, originalCancellationToken);
 
@@ -39,7 +39,7 @@
                     context.Request.Path,
                     _timeout.TotalMilliseconds);
 
-                context.Response.StatusCode = 504; // Gateway Timeout
+                context.Response.StatusCode = 504;
                 await context.Response.WriteAsJsonAsync(new
                 {
                     error = "The request took too long to complete",

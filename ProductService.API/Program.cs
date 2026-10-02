@@ -37,7 +37,6 @@ builder.Host.UseSerilog();
 Log.Information("Starting ProductService API");
 
 
-// Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -49,7 +48,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Product Service with JWT Authentication"
     });
 
-    //Add JWT Authentication support
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -77,7 +75,6 @@ builder.Services.AddSwaggerGen(options =>
         });
 });
 
-// Add CORS policy
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -89,13 +86,12 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Add AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-//Add JWT Authentication
+// Service-to-service calls send X-Api-Key, everyone else a JWT.
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = "JWT_OR_APIKEY";
@@ -120,20 +116,16 @@ builder.Services.AddAuthentication(options =>
     {
         options.ForwardDefaultSelector = context =>
         {
-            // Check if the request has an API key header
             if (context.Request.Headers.ContainsKey("X-Api-Key"))
             {
                 return "ApiKey";
             }
-            // Otherwise, use JWT Bearer authentication
             return "Bearer";
         };
     });
 
-//Add Authorization with permissions
 builder.Services.AddAuthorization(options =>
 {
-    //Add permission policies
     options.AddPolicy(AllPermissions.ProductView, policy =>
         policy.Requirements.Add(new PermissionRequirement(AllPermissions.ProductView)));
     options.AddPolicy(AllPermissions.ProductCreate, policy =>
@@ -154,7 +146,6 @@ builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
 var app = builder.Build();
 
-// Configure pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -173,7 +164,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 
-// Apply migrations
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ProductDbContext>();

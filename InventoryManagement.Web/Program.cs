@@ -31,7 +31,7 @@ try
 
     builder.Services.AddCustomAuthentication(builder.Configuration);
 
-    builder.Services.AddDistributedMemoryCache(); // Add this for better session handling
+    builder.Services.AddDistributedMemoryCache(); // Session storage
     builder.Services.AddSession(options =>
     {
         options.IdleTimeout = TimeSpan.FromDays(7);
@@ -52,7 +52,7 @@ try
 
     builder.Services.ConfigureApplicationCookie(options =>
     {
-        options.ExpireTimeSpan = TimeSpan.FromDays(1); // Increased from 2 hours
+        options.ExpireTimeSpan = TimeSpan.FromDays(1);
         options.SlidingExpiration = true;
 
         options.Events.OnRedirectToLogin = context =>
@@ -82,7 +82,6 @@ try
         };
     });
 
-    // Configure CORS properly for production
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("Production", policy =>
@@ -129,8 +128,8 @@ try
     if (app.Environment.IsProduction())
     {
         app.UseExceptionHandler("/Home/Error");
-        app.UseHsts(); // Adds HSTS header for security
-        app.UseHttpsRedirection(); // Force HTTPS in production
+        app.UseHsts();
+        app.UseHttpsRedirection();
         app.UseCors("Production");
     }
     else

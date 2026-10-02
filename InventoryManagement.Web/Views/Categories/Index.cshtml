@@ -276,15 +276,12 @@
     <script src="~/js/pdf-export.js" asp-append-version="true"></script>
     <script>
         $(document).ready(function() {
-            // Store all category elements for filtering
             const allCategories = Array.from(document.querySelectorAll('#categoriesTable tr'));
 
-            // Filter change handlers
             $('#statusFilter, #sortBy').on('change', function() {
                 filterCategories();
             });
 
-            // Restore filter values from URL
             restoreFilterValues();
         });
 
@@ -292,13 +289,10 @@
             const statusFilter = $('#statusFilter').val();
             const sortBy = $('#sortBy').val();
 
-            // Get all rows
             const allRows = Array.from(document.querySelectorAll('#categoriesTable tr'));
 
-            // Filter rows
             let visibleRows = allRows.filter(row => {
 
-                // Status filter
                 const isActive = row.querySelector('.badge.bg-success-soft') !== null;
                 const matchesStatus = !statusFilter ||
                     (statusFilter === 'active' && isActive) ||
@@ -307,7 +301,6 @@
                 return matchesSearch && matchesStatus;
             });
 
-            // Sort rows
             visibleRows.sort((a, b) => {
                 switch(sortBy) {
                     case 'name':
@@ -327,12 +320,10 @@
                 }
             });
 
-            // Update table
             const tbody = document.getElementById('categoriesTable');
             tbody.innerHTML = '';
             visibleRows.forEach(row => tbody.appendChild(row));
 
-            // Show/hide empty state
             if (visibleRows.length === 0) {
                 if (!document.getElementById('noResults')) {
                     tbody.innerHTML = `
@@ -355,7 +346,6 @@
             }
         }
 
-                // Add to your department/category view pages
         function applyFilters() {
             const searchTerm = $('#searchInput').val().trim();
             const params = new URLSearchParams();
@@ -371,14 +361,11 @@
         }
 
         function resetFilters() {
-            // Clear all input fields
             $('#searchInput').val('');
 
-            // Reload the page without parameters to refresh items
             window.location.href = window.location.pathname;
         }
 
-        // Enable search on Enter key
         $('#searchInput').on('keypress', function(e) {
             if (e.which === 13) {
                 applyFilters();

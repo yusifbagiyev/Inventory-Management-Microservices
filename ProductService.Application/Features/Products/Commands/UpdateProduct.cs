@@ -90,7 +90,6 @@ namespace ProductService.Application.Features.Products.Commands
 
                         if (shouldUpdateImage)
                         {
-                            // Upload new image
                             using var stream = updatedProduct.ImageFile!.OpenReadStream();
                             newImageUrl = await _imageService.UploadImageAsync(stream, updatedProduct.ImageFile.FileName, product.InventoryCode);
 
@@ -99,13 +98,11 @@ namespace ProductService.Application.Features.Products.Commands
                             updateEvent.ImageData = ms.ToArray();
                             updateEvent.ImageFileName = updatedProduct.ImageFile.FileName;
                         }
-                        // Delete old image only after successful update
                         if (shouldUpdateImage && !string.IsNullOrEmpty(oldImageUrl))
                         {
                             await _imageService.DeleteImageAsync(oldImageUrl);
                         }
 
-                        // Update product with new image URL or keep the old one
                         product.Update(
                             updatedProduct.Model,
                             updatedProduct.Vendor,
@@ -125,7 +122,6 @@ namespace ProductService.Application.Features.Products.Commands
                     },
                     async () =>
                     {
-                        // Delete new image if update fails
                         if (!string.IsNullOrEmpty(newImageUrl))
                         {
                             await _imageService.DeleteImageAsync(newImageUrl);

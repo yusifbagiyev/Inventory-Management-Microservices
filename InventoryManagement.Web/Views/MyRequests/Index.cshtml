@@ -7,7 +7,7 @@
         <li class="breadcrumb-item active">My Requests</li>
     </ol>
 
-    <!-- Add filter buttons -->
+    <!-- Status filter -->
     <div class="mb-3">
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-outline-primary filter-btn active" data-filter="all">
@@ -139,7 +139,6 @@
                 pageLength: 25
             });
 
-            // Filter functionality
             $('.filter-btn').click(function() {
                 $('.filter-btn').removeClass('active');
                 $(this).addClass('active');
@@ -153,7 +152,6 @@
                     $(`tr[data-status="${filter}"]`).show();
                 }
 
-                // Refresh DataTable
                 $('#myRequestsTable').DataTable().draw();
             });
         });
@@ -171,10 +169,8 @@
 
          function cancelRequest(requestId) {
             if (confirm('Are you sure you want to cancel this request?')) {
-                // Get the anti-forgery token from the page
                 const token = $('input[name="__RequestVerificationToken"]').val();
 
-                // Show loading state
                 const $cancelButton = $(`button[onclick="cancelRequest(${requestId})"]`);
                 const originalButtonText = $cancelButton.html();
                 $cancelButton.prop('disabled', true)
@@ -191,41 +187,36 @@
                         __RequestVerificationToken: token
                     },
                     success: function(response) {
-                        console.log('Raw response:', response); // This will help us see exactly what we're getting
+                        console.log('Raw response:', response);
 
-                        // Be very explicit about what constitutes success
                         let isSuccess = false;
                         let message = 'Request cancelled successfully';
 
-                        // Handle different response formats your server might return
+                        // Accept JSON in either casing as well as a plain-text reply.
                         if (typeof response === 'object' && response !== null) {
-                            // Check for explicit success indicators
                             isSuccess = response.success === true ||
                                        response.isSuccess === true ||
                                        response.Success === true;
 
-                            // Extract the message if available
                             if (response.message) message = response.message;
                             else if (response.Message) message = response.Message;
                         } else if (typeof response === 'string') {
-                            // Sometimes servers return plain text success messages
                             isSuccess = true;
                             message = response;
                         } else {
-                            // If we get here and the AJAX call reached 'success', assume it worked
+                            // An empty 2xx reply counts as success.
                             isSuccess = true;
                         }
 
                         if (isSuccess) {
-                            // Explicitly show success toast
                             showToast(message, 'success');
 
-                            // Refresh the page after a brief delay to show the success message
+                            // Give the toast a moment before the reload.
                             setTimeout(function() {
                                 window.location.reload();
                             }, 1500);
                         } else {
-                            // Handle case where server returned success HTTP status but indicates failure in response
+                            // A 200 can still carry success: false.
                             showToast(message || 'Failed to cancel request', 'error');
                             $cancelButton.prop('disabled', false).html(originalButtonText);
                         }
@@ -237,7 +228,6 @@
                             error: error
                         });
 
-                        // Extract meaningful error message
                         let errorMessage = 'Failed to cancel request';
 
                         if (xhr.responseJSON && xhr.responseJSON.message) {

@@ -73,7 +73,6 @@ namespace NotificationService.Infrastructure.Services
 
                 _channel.ExchangeDeclare("inventory-events", ExchangeType.Topic, durable: true);
                 _channel.QueueDeclare(_queueName, durable: true, exclusive: false, autoDelete: false);
-                // Bind all event types we want to listen to
                 _channel.QueueBind(_queueName, "inventory-events", "approval.request.created");
                 _channel.QueueBind(_queueName, "inventory-events", "approval.request.processed");
                 _channel.QueueBind(_queueName, "inventory-events", "approval.request.cancelled");
@@ -117,7 +116,6 @@ namespace NotificationService.Infrastructure.Services
 
             _channel.BasicConsume(_queueName, false, consumer);
 
-            // Keep the service running
             while (!stoppingToken.IsCancellationRequested)
             {
                 await Task.Delay(1000, stoppingToken);
@@ -162,7 +160,6 @@ namespace NotificationService.Infrastructure.Services
                 var approvalEvent = JsonSerializer.Deserialize<ApprovalRequestCreatedEvent>(message);
                 if (approvalEvent == null) return;
 
-                // Get all admin users
                 using var scope = _serviceProvider.CreateScope();
                 var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
                 var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<NotificationHub>>();
@@ -193,7 +190,7 @@ namespace NotificationService.Infrastructure.Services
 
                 await Task.WhenAll(tasks);
 
-                // Also send a broadcast to all admins via role group for redundancy
+                // Lets open approval pages reload their list.
                 await hubContext.Clients.Group("role-Admin").SendAsync("RefreshApprovals", new
                 {
                     requestId = approvalEvent.RequestId,
@@ -281,12 +278,11 @@ namespace NotificationService.Infrastructure.Services
                 var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
                 var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-                // Find and delete notifications related to this approval request
                 var notifications = await notificationRepo.GetByUserIdAsync(cancelEvent.RequestedById, false);
 
                 foreach (var notification in notifications)
                 {
-                    // Check if this notification is related to the cancelled request
+                    // The request id may be stored under either key.
                     if (notification.Data?.Contains($"\"approvalRequestId\":{cancelEvent.RequestId}") == true ||
                         notification.Data?.Contains($"\"RequestId\":{cancelEvent.RequestId}") == true)
                     {
@@ -295,7 +291,6 @@ namespace NotificationService.Infrastructure.Services
                     }
                 }
 
-                // Also delete admin notifications
                 var adminUsers = await userService.GetUsersAsync("Admin");
                 foreach (var admin in adminUsers)
                 {
@@ -361,7 +356,6 @@ namespace NotificationService.Infrastructure.Services
                 var productEvent = JsonSerializer.Deserialize<ProductDeletedEvent>(message);
                 if (productEvent == null) return;
 
-                // Notify relevant users
                 var allUsers = await GetAllUsersId();
 
                 foreach (var userId in allUsers)
@@ -395,7 +389,6 @@ namespace NotificationService.Infrastructure.Services
                 var routeEvent = JsonSerializer.Deserialize<RouteCreatedEvent>(message);
                 if (routeEvent == null) return;
 
-                // Notify destination department
                 var allUsers = await GetAllUsersId();
 
                 foreach (var userId in allUsers)
@@ -430,7 +423,6 @@ namespace NotificationService.Infrastructure.Services
 
                 await SendWhatsAppRouteNotification(routeEvent, "transferred");
 
-                // Notify relevant users
                 var allUsers = await GetAllUsersId();
 
                 foreach (var userId in allUsers)
@@ -469,7 +461,6 @@ namespace NotificationService.Infrastructure.Services
                 await unitOfWork.SaveChangesAsync();
                 _logger.LogInformation($"✅ Notification saved to database for user {notification.UserId}");
 
-                // Prepare the notification DTO for SignalR
                 var notificationDto = new
                 {
                     id = notification.Id,
@@ -503,7 +494,6 @@ namespace NotificationService.Infrastructure.Services
                 var whatsAppService = scope.ServiceProvider.GetRequiredService<IWhatsAppService>();
                 var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-                // Check if Whatsapp notifications are enabled
                 var whatsAppEnabled = configuration.GetValue<bool>("Whatsapp:Enabled", true);
                 if (!whatsAppEnabled)
                 {
@@ -518,7 +508,6 @@ namespace NotificationService.Infrastructure.Services
                     return;
                 }
 
-                // Create the notification data
                 var notification = new WhatsAppProductNotification
                 {
                     ProductId = productEvent.ProductId,
@@ -538,12 +527,10 @@ namespace NotificationService.Infrastructure.Services
                     ImageFileName = productEvent.ImageFileName
                 };
 
-                // Format the message
                 var message = whatsAppService.FormatNotification(notification);
 
                 bool success;
 
-                // Determine how to send based on available image data
                 if (productEvent.ImageUrl != null && productEvent.ImageData?.Length > 0)
                 {
                     success = await whatsAppService.SendGroupMessageWithImageDataAsync(
@@ -556,7 +543,6 @@ namespace NotificationService.Infrastructure.Services
                 {
                     try
                     {
-                        // Fetch the image from the ProductService
                         var baseUrl = configuration["Services:ProductServiceUrl"] ?? "http://localhost:5001";
                         var fullImageUrl = $"{baseUrl}{productEvent.ImageUrl}";
 
@@ -578,7 +564,6 @@ namespace NotificationService.Infrastructure.Services
                 }
                 else
                 {
-                    // No image available, send text only
                     success = await whatsAppService.SendGroupMessageAsync(groupId, message);
                 }
 
@@ -606,7 +591,6 @@ namespace NotificationService.Infrastructure.Services
                 var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
                 var httpClientFactory = scope.ServiceProvider.GetService<IHttpClientFactory>();
 
-                // Check if Whatsapp notifications are enabled
                 var whatsAppEnabled = configuration.GetValue<bool>("Whatsapp:Enabled", true);
                 if (!whatsAppEnabled)
                 {
@@ -621,7 +605,6 @@ namespace NotificationService.Infrastructure.Services
                     return;
                 }
 
-                // Create the notification data
                 var notification = new WhatsAppProductNotification
                 {
                     ProductId = routeEvent.ProductId,
@@ -638,7 +621,6 @@ namespace NotificationService.Infrastructure.Services
                     NotificationType = notificationType
                 };
 
-                // Format the message
                 var message = whatsAppService.FormatNotification(notification);
 
                 bool success;
@@ -676,7 +658,6 @@ namespace NotificationService.Infrastructure.Services
                 }
                 else
                 {
-                    // No image available, send text only
                     success = await whatsAppService.SendGroupMessageAsync(groupId, message);
                 }
                 if (success)

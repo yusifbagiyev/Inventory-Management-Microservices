@@ -72,8 +72,7 @@ namespace ProductService.Infrastructure.Repositories
             {
                 search = search.Trim();
 
-                // First, apply a broad database filter to reduce the dataset
-                // This uses standard SQL ILIKE which works but isn't perfect for Azerbaijani
+                // ILIKE narrows the rows in SQL but misses Azerbaijani letter variants.
                 var broadQuery = query.Where(r =>
                     EF.Functions.ILike(r.InventoryCode.ToString(), $"%{search}%") ||
                     EF.Functions.ILike(r.Vendor, $"%{search}%") ||
@@ -84,13 +83,12 @@ namespace ProductService.Infrastructure.Repositories
                     EF.Functions.ILike(r.Worker ?? "", $"%{search}%")
                 );
 
-                // Load the filtered results into memory
                 var allFilteredItems = await broadQuery
                     .OrderByDescending(r => r.CreatedAt)
                     .ThenByDescending(r => r.UpdatedAt)
                     .ToListAsync(cancellationToken);
 
-                // Now apply Azerbaijani-aware search in memory for precision
+                // The Azerbaijani-aware match runs in memory, so paging has to follow it there.
                 items = allFilteredItems.Where(r =>
                     SearchHelper.ContainsAzerbaijani(r.InventoryCode.ToString(), search) ||
                     SearchHelper.ContainsAzerbaijani(r.Vendor, search) ||
@@ -103,7 +101,6 @@ namespace ProductService.Infrastructure.Repositories
 
                 totalCount = items.Count();
 
-                // Apply pagination in memory
                 items = items
                     .Skip((pageNumber - 1) * pageSize)
                     .Take(pageSize)
@@ -111,7 +108,6 @@ namespace ProductService.Infrastructure.Repositories
             }
             else
             {
-                // No search term - use standard database pagination
                 totalCount = await query.CountAsync(cancellationToken);
 
                 items = await query

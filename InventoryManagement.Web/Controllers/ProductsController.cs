@@ -64,7 +64,6 @@ namespace InventoryManagement.Web.Controllers
                     }
 
 
-                    // Calculate actual displayed range
                     var start = ((products.PageNumber - 1) * products.PageSize) + 1;
                     var end = Math.Min(products.PageNumber * products.PageSize, products.TotalCount);
                     ViewBag.ShowingStart = start;
@@ -95,7 +94,7 @@ namespace InventoryManagement.Web.Controllers
             try
             {
                 var product = await _apiService.GetAsync<ProductViewModel>($"api/products/{id}");
-                // Handle deleted product scenario
+                // A deleted product comes back as null.
                 if (product == null)
                 {
                     return RedirectToAction("NotFound","Home");

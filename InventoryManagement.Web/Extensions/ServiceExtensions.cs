@@ -10,14 +10,12 @@ namespace InventoryManagement.Web.Extensions
     {
         public static IServiceCollection AddCustomServices(this IServiceCollection services)
         {
-            // Add HTTP clients
             services.AddHttpClient<IApiService, ApiService>();
             services.AddHttpClient<IAuthService, AuthService>();
             services.AddHttpClient<IApprovalService, ApprovalService>();
             services.AddHttpClient<INotificationService, Services.NotificationService>();
             services.AddHttpClient<IUserManagementService, UserManagementService>();
 
-            // Add other services
             services.AddScoped<IApiService, ApiService>();
             services.AddScoped<IUrlService, UrlService>();
             services.AddScoped<IAuthService, AuthService>();

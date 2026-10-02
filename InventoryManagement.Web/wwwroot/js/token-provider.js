@@ -1,35 +1,23 @@
-﻿/**
- * Secure Token Provider
- * Fetches tokens from server only when needed
- * Never stores tokens in DOM or localStorage
- * Tokens live only in memory and are refreshed as needed
- */
+﻿// Gets the API token from the server when needed. It lives only in memory, never in the DOM or localStorage.
 window.SecureTokenProvider = (function () {
     'use strict';
 
     let cachedToken = null;
     let tokenExpiryTime = null;
-    let fetchPromise = null; // Prevent multiple simultaneous fetches
+    // Shared by concurrent callers so only one request goes to the server.
+    let fetchPromise = null;
 
-    /**
-     * Gets a valid token from the server
-     * Caches the token in memory for 5 minutes
-     * Automatically refetches when cache expires
-     */
     async function getToken() {
-        // If we have a cached token that hasn't expired, use it
         if (cachedToken && tokenExpiryTime && Date.now() < tokenExpiryTime) {
             console.log('Using cached token');
             return cachedToken;
         }
 
-        // If a fetch is already in progress, wait for it
         if (fetchPromise) {
             console.log('Token fetch already in progress, waiting...');
             return await fetchPromise;
         }
 
-        // Start a new fetch
         console.log('Fetching fresh token from server...');
         fetchPromise = fetchTokenFromServer();
 
@@ -37,19 +25,15 @@ window.SecureTokenProvider = (function () {
             const token = await fetchPromise;
             return token;
         } finally {
-            fetchPromise = null; // Clear the promise
+            fetchPromise = null;
         }
     }
 
-    /**
-     * Fetches token from server endpoint
-     * @private
-     */
     async function fetchTokenFromServer() {
         try {
             const response = await fetch('/api/token/current', {
                 method: 'GET',
-                credentials: 'same-origin', // Send cookies
+                credentials: 'same-origin',
                 headers: {
                     'Accept': 'application/json'
                 }
@@ -58,7 +42,6 @@ window.SecureTokenProvider = (function () {
             if (!response.ok) {
                 if (response.status === 401) {
                     console.error('Token fetch failed: Unauthorized');
-                    // User needs to login
                     window.location.href = '/Account/Login';
                     throw new Error('Unauthorized');
                 }
@@ -71,10 +54,9 @@ window.SecureTokenProvider = (function () {
                 throw new Error('No token in response');
             }
 
-            // Cache for 2 minutes instead of 5
-            // This ensures we get fresh tokens more frequently without overwhelming the server
+            // Short cache so a token refreshed on the server is picked up soon.
             cachedToken = data.token;
-            tokenExpiryTime = Date.now() + (2 * 60 * 1000); // 2 minutes
+            tokenExpiryTime = Date.now() + (2 * 60 * 1000);
 
             console.log('Token fetched and cached successfully');
             return cachedToken;
@@ -87,28 +69,19 @@ window.SecureTokenProvider = (function () {
         }
     }
 
-    /**
-     * Clears the cached token
-     * Call this when user logs out or token becomes invalid
-     */
+    // Call on logout or when the server rejects the token.
     function clearToken() {
         console.log('Clearing cached token');
         cachedToken = null;
         tokenExpiryTime = null;
     }
 
-    /**
-     * Forces a fresh token fetch, bypassing cache
-     */
     async function refreshToken() {
         console.log('Forcing token refresh');
         clearToken();
         return await getToken();
     }
 
-    /**
-     * Checks if user is authenticated
-     */
     async function isAuthenticated() {
         try {
             const response = await fetch('/api/token/validate', {
@@ -128,7 +101,6 @@ window.SecureTokenProvider = (function () {
         }
     }
 
-    // Public API
     return {
         getToken: getToken,
         clearToken: clearToken,

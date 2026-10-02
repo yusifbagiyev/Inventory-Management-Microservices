@@ -30,7 +30,6 @@ namespace IdentityService.Infrastructure.Data
                       .HasColumnType("timestamp without time zone");
             });
 
-            // Configure RolePermission many-to-many
             builder.Entity<RolePermission>(entity =>
             {
                 entity.HasKey(r => new { r.RoleId, r.PermissionId });
@@ -44,7 +43,6 @@ namespace IdentityService.Infrastructure.Data
                     .HasForeignKey(rp => rp.PermissionId);
             });
 
-            // Fixed UserPermission configuration
             builder.Entity<UserPermission>(entity =>
             {
                 entity.Property(u => u.GrantedAt)
@@ -79,13 +77,12 @@ namespace IdentityService.Infrastructure.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Seed initial data with static values
             SeedData(builder);
         }
 
         private void SeedData(ModelBuilder builder)
         {
-            // Use static password hash to avoid dynamic values
+            // Seed values must be constants, otherwise every new migration sees a model change.
             var user = new User
             {
                 Id = 1,
@@ -101,12 +98,11 @@ namespace IdentityService.Infrastructure.Data
                 LockoutEnabled = false,
                 EmailConfirmed = true,
                 AccessFailedCount = 0,
-                CreatedAt = new DateTime(2025, 8, 1, 0, 0, 0) // Static date
+                CreatedAt = new DateTime(2025, 8, 1, 0, 0, 0)
             };
 
             builder.Entity<User>().HasData(user);
 
-            // Add user to Admin role
             builder.Entity<IdentityUserRole<int>>().HasData(
                 new IdentityUserRole<int> 
                 { 
@@ -122,10 +118,8 @@ namespace IdentityService.Infrastructure.Data
             };
             builder.Entity<Role>().HasData(roles);
 
-            // Seed Permissions (expanded)
             var permissions = new[]
             {
-                // Route permissions
                 new Permission { Id = 1, Name = AllPermissions.RouteView, Category = "Route", Description = "View routes" },
                 new Permission { Id = 2, Name = AllPermissions.RouteCreate, Category = "Route", Description = "Create routes" },
                 new Permission { Id = 3, Name = AllPermissions.RouteCreateDirect, Category = "Route", Description = "Create routes (requires approval)" },
@@ -134,8 +128,7 @@ namespace IdentityService.Infrastructure.Data
                 new Permission { Id = 6, Name = AllPermissions.RouteDelete, Category = "Route", Description = "Delete routes (requires approval)" },
                 new Permission { Id = 7, Name = AllPermissions.RouteDeleteDirect, Category = "Route", Description = "Delete routes directly" },
                 new Permission { Id = 8, Name = AllPermissions.RouteComplete, Category = "Route", Description = "Complete routes" },
-        
-                // Product permissions
+
                 new Permission { Id = 9, Name = AllPermissions.ProductView, Category = "Product", Description = "View products" },
                 new Permission { Id = 10, Name = AllPermissions.ProductCreate, Category = "Product", Description = "Create products (requires approval)" },
                 new Permission { Id = 11, Name = AllPermissions.ProductCreateDirect, Category = "Product", Description = "Create products directly" },
@@ -146,29 +139,29 @@ namespace IdentityService.Infrastructure.Data
             };
             builder.Entity<Permission>().HasData(permissions);
 
-            // Update Role Permissions
             var rolePermissions = new List<RolePermission>();
 
-            // Admin - All direct permissions
+            // Admin gets every permission.
             for (int i = 1; i <= 15; i++)
             {
                 rolePermissions.Add(new RolePermission { RoleId = 1, PermissionId = i });
             }
 
-            // Manager (Operator) - Request permissions only
+            // Operator was meant to get view plus the approval-request permissions.
+            // From id 8 on the ids are one too low, so it gets the permissions named below instead.
             rolePermissions.AddRange(new[]
             {
                 new RolePermission { RoleId = 2, PermissionId = 1 }, // RouteView
                 new RolePermission { RoleId = 2, PermissionId = 2 }, // RouteCreate
-                new RolePermission { RoleId = 2, PermissionId = 4 }, // RouteUpdate (request)
-                new RolePermission { RoleId = 2, PermissionId = 6 }, // RouteDelete (request)
-                new RolePermission { RoleId = 2, PermissionId = 8 }, // ProductView
-                new RolePermission { RoleId = 2, PermissionId = 9 }, // ProductCreate (request)
-                new RolePermission { RoleId = 2, PermissionId = 11 }, // ProductUpdate (request)
-                new RolePermission { RoleId = 2, PermissionId = 13 }, // ProductDelete (request)
+                new RolePermission { RoleId = 2, PermissionId = 4 }, // RouteUpdate
+                new RolePermission { RoleId = 2, PermissionId = 6 }, // RouteDelete
+                new RolePermission { RoleId = 2, PermissionId = 8 }, // RouteComplete
+                new RolePermission { RoleId = 2, PermissionId = 9 }, // ProductView
+                new RolePermission { RoleId = 2, PermissionId = 11 }, // ProductCreateDirect
+                new RolePermission { RoleId = 2, PermissionId = 13 }, // ProductUpdateDirect
             });
 
-            // User - View only
+            // User can only view.
             rolePermissions.AddRange(new[]
             {
                 new RolePermission { RoleId = 3, PermissionId = 1 }, // RouteView

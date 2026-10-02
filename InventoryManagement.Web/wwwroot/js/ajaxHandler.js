@@ -1,7 +1,7 @@
 ﻿window.AjaxHandler = (function () {
     'use strict';
 
-    // Add a registry to track form submission states
+    // One submitting flag per form, so a double click sends one request.
     const submissionStates = new WeakMap();
     function handleForm(formSelector, options) {
         const defaults = {
@@ -17,7 +17,6 @@
 
         const settings = { ...defaults, ...options };
 
-        // Get the specific form element(s)
         const $forms = $(formSelector);
 
         if (!$forms.length) {
@@ -25,21 +24,19 @@
             return;
         }
 
-        // Handle each form individually to avoid conflicts
         $forms.each(function () {
             const $individualForm = $(this);
             const formElement = this;
 
 
-            // Initialize submission state for this form
             if (!submissionStates.has(formElement)) {
                 submissionStates.set(formElement, { isSubmitting: false });
             }
 
-            // Remove any existing handlers first (important!)
+            // Calling handleForm twice on the same form must not stack handlers.
             $individualForm.off('submit.ajaxHandler');
 
-            // Find submit button for this specific form
+            // Only buttons that belong to this form, not to a form inside it.
             const $submitBtnInThisForm = $individualForm.find('button[type="submit"]').filter(function () {
                 return $(this).closest('form')[0] === formElement;
             });
@@ -49,11 +46,10 @@
                 return;
             }
 
-            // Store original button state
             const originalButtonHtml = $submitBtnInThisForm.html();
             const originalButtonDisabled = $submitBtnInThisForm.prop('disabled');
 
-            // Add a click handler to prevent rapid clicks
+            // Swallow clicks while a submit is still in flight.
             $submitBtnInThisForm.off('click.preventDouble');
             $submitBtnInThisForm.on('click.preventDouble', function (e) {
                 const formState = submissionStates.get(formElement);
@@ -67,21 +63,19 @@
             });
 
 
-            // Attach the submit handler
             $individualForm.on('submit.ajaxHandler', function (e) {
                 e.preventDefault();
-                e.stopPropagation(); // Prevent event bubbling
+                e.stopPropagation();
 
                 const form = this;
                 const formState = submissionStates.get(form);
 
-                // Check if already submitting
                 if (formState.isSubmitting) {
                     console.log('Form is already being submitted, ignoring duplicate submission');
                     return false;
                 }
 
-                // IMMEDIATELY mark as submitting and disable button
+                // Lock before validating so a second click cannot slip in.
                 formState.isSubmitting = true;
                 const $currentSubmitBtn = $(form).find('button[type="submit"]').filter(function () {
                     return $(this).closest('form')[0] === form;
@@ -91,7 +85,6 @@
                     .html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
 
 
-                // Validate form
                 if (settings.validateBeforeSubmit) {
                     if (!form.checkValidity()) {
                         form.reportValidity();
@@ -107,7 +100,6 @@
                     }
                 }
 
-                // Call before submit hook
                 if (settings.onBeforeSubmit) {
                     const shouldContinue = settings.onBeforeSubmit(form);
                     if (shouldContinue === false) {
@@ -117,21 +109,17 @@
                     }
                 }
 
-                // Disable button and show loading
                 $currentSubmitBtn.prop('disabled', true)
                     .html('<span class="spinner-border spinner-border-sm me-2"></span>Processing...');
 
-                // Prepare form data
                 const formData = new FormData(form);
 
-                // Helper function to restore button
                 const restoreButton = () => {
                     $currentSubmitBtn.prop('disabled', originalButtonDisabled)
                         .html(originalButtonHtml);
-                    formState.isSubmitting = false; // Reset submission state
+                    formState.isSubmitting = false;
                 };
 
-                // Submit form via AJAX
                 $.ajax({
                     url: form.action || window.location.href,
                     type: form.method || 'POST',
@@ -139,7 +127,6 @@
                     processData: false,
                     contentType: false,
                     success: function (response, textStatus, xhr) {
-                        // Handle different response types
                         const contentType = xhr.getResponseHeader('content-type') || '';
 
                         if (contentType.indexOf('text/html') > -1) {
@@ -147,40 +134,37 @@
                         } else {
                             handleSuccess(response, form, settings);
                         }
-                        restoreButton(); // Always restore after success
+                        restoreButton();
                     },
                     error: function (xhr, status, error) {
-                        restoreButton(); // Always restore on error
+                        restoreButton();
                         handleError(xhr, form, settings);
                     },
                     complete: function () {
-                        // Failsafe: Always ensure button is restored and state is reset
+                        // Safety net in case a handler above threw before the button came back.
                         setTimeout(() => {
                             restoreButton();
                         }, 3000);
                     }
                 });
 
-                return false; // Prevent default form submission
+                return false;
             });
         });
     }
 
-    // Simplified handleSuccess function
     function handleSuccess(response, form, settings) {
-        // FIRST: Check if this is an approval request (before checking for errors)
+        // Check for an approval request before the error checks, which it could otherwise trip.
         if (isApprovalRequest(response)) {
             const message = response.message || 'Request submitted for approval';
             showToast(message, 'info');
 
-            // Still redirect for approval requests
             if (settings.successRedirect) {
                 setTimeout(() => window.location.href = settings.successRedirect, settings.redirectDelay);
             }
             return;
         }
 
-        // THEN: Check for actual errors
         if (response && (
             response.isSuccess === false ||
             response.success === false ||
@@ -192,10 +176,9 @@
             if (settings.onError) {
                 settings.onError(errorMessage, response);
             }
-            return; // Don't redirect on actual errors
+            return;
         }
 
-        // Finally: Handle normal success
         if (settings.onSuccess) {
             const result = settings.onSuccess(response);
             if (result === false) return;
@@ -212,7 +195,6 @@
         }
     }
 
-    // Rest of your functions remain the same...
     function handleError(xhr, form, settings) {
         let errorMessage = 'An error occurred';
         let validationErrors = null;
@@ -239,7 +221,6 @@
                 }
             }
 
-            // Handle specific status codes
             if (xhr.status === 400) {
                 errorMessage = errorMessage || 'Invalid request. Please check your input.';
             } else if (xhr.status === 401) {
@@ -274,7 +255,6 @@
     }
 
     function displayValidationErrors(form, errors) {
-        // Clear previous validation errors
         $(form).find('.field-validation-error').removeClass('field-validation-error');
         $(form).find('.validation-message').remove();
 
@@ -294,19 +274,17 @@
     }
 
     function handleHtmlResponse(html, form, settings) {
-        // Replace form with server response (for server-side validation)
+        // An HTML reply is the form rendered again by the server with its validation errors.
         const $container = $(form).closest('.card-body');
         if ($container.length) {
             $container.html(html);
-            // Re-attach handler to new form
+            // The swapped-in form has no submit handler yet.
             const $newForm = $container.find('form');
             if ($newForm.length) {
-                // Use a more specific selector for the new form
                 const formId = $newForm.attr('id');
                 if (formId) {
                     AjaxHandler.handleForm('#' + formId, settings);
                 } else {
-                    // Add a unique identifier to the form
                     const uniqueId = 'form-' + Date.now();
                     $newForm.attr('id', uniqueId);
                     AjaxHandler.handleForm('#' + uniqueId, settings);
@@ -315,13 +293,11 @@
         }
     }
 
-    // Public API
     return {
         handleForm: handleForm
     };
 })();
 
-// Global error handler utility remains the same
 window.ErrorHandler = {
     parseErrorMessage: function (xhr, defaultMessage) {
         defaultMessage = defaultMessage || 'An error occurred';

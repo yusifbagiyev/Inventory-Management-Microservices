@@ -1,5 +1,4 @@
-﻿/* Modern UI Styles */
-:root {
+﻿:root {
     --primary-color: #667eea;
     --secondary-color: #764ba2;
     --success-color: #10b981;
@@ -59,7 +58,7 @@ body {
     padding: 1rem 0;
 }
 
-/* Fix notification badge positioning */
+/* Positioning context for the notification badges in the sidebar */
 .sidebar-nav .nav-item {
     position: relative;
 }
@@ -296,7 +295,7 @@ body {
 }
 
 .search-wrapper {
-    display: none; /* Remove non-functional search */
+    display: none; /* Hidden until the search box does something */
 }
 
 .icon-badge {

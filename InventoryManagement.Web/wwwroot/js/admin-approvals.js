@@ -10,14 +10,14 @@ async function loadPendingApprovalsCount() {
 
     setTimeout(async () => {
         try {
-            // SECURITY: Get token from secure provider instead of DOM
+            // The token comes from the provider, never from the DOM.
             const token = await SecureTokenProvider.getToken();
 
             $.ajax({
                 url: apiUrl,
                 type: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${token}` // Use token from secure provider
+                    'Authorization': `Bearer ${token}`
                 },
                 timeout: 10000,
                 success: function (data) {
@@ -53,7 +53,7 @@ async function loadPendingApprovalsCount() {
             console.error('Failed to get token:', error);
             isLoadingApprovals = false;
 
-            // If token fetch fails, user likely needs to re-authenticate
+            // A failed token fetch usually means the session has ended.
             if (error.message.includes('Unauthorized')) {
                 window.location.href = '/Account/Login';
             }
@@ -62,10 +62,8 @@ async function loadPendingApprovalsCount() {
 }
 
 function updatePendingApprovalsCount(count) {
-    // Ensure count is a valid number
     count = parseInt(count) || 0;
 
-    // Update the main navigation badge
     const $headerBadge = $('#pendingApprovalsCount');
     if ($headerBadge.length) {
         if (count > 0) {
@@ -75,7 +73,6 @@ function updatePendingApprovalsCount(count) {
         }
     }
 
-    // Update the sidebar badge
     const $sidebarBadge = $('#sidebarPendingCount');
     if ($sidebarBadge.length) {
         if (count > 0) {
@@ -85,27 +82,23 @@ function updatePendingApprovalsCount(count) {
         }
     }
 
-    // Store the count for reference
     window.currentApprovalsCount = count;
 
-    // Trigger a custom event that other parts of the app can listen to
+    // Other scripts on the page listen for this event.
     $(document).trigger('approvals:count-updated', [count]);
 }
 
-// Debounced version for frequent calls
+// Use this one from handlers that can fire many times in a row.
 function debouncedLoadPendingApprovalsCount() {
-    // Clear any existing timeout
     if (window.approvalsLoadTimeout) {
         clearTimeout(window.approvalsLoadTimeout);
     }
 
-    // Set a new timeout
     window.approvalsLoadTimeout = setTimeout(() => {
         loadPendingApprovalsCount();
-    }, 500); // Wait 500ms before actually loading
+    }, 500);
 }
 
-// Export the functions for use by other modules
 window.loadPendingApprovalsCount = loadPendingApprovalsCount;
 window.debouncedLoadPendingApprovalsCount = debouncedLoadPendingApprovalsCount;
 window.updatePendingApprovalsCount = updatePendingApprovalsCount;

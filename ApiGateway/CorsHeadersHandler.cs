@@ -9,14 +9,12 @@ namespace ApiGateway
         {
             var response=await base.SendAsync(request, cancellationToken);
 
-            // Ensure CORS headers are present for all responses
             if(!response.Headers.Contains("Access-Control-Allow-Origin"))
             {
                 response.Headers.Add("Access-Control-Allow-Origin", "http://localhost:5051");
                 response.Headers.Add("Access-Control-Allow-Credentials", "true");
             }
 
-            // For preflight requests, add additional headers
             if (request.Method == HttpMethod.Options)
             {
                 response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");

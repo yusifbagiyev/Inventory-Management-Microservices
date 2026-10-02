@@ -86,7 +86,7 @@
                                     <label class="form-label">Roles</label>
                                     <div class="role-selection border rounded p-3">
                                         @{
-                                            // Add a hidden field to ensure we always send role data
+                                            // Unticked checkboxes post nothing, so this tells the controller the roles were on the form.
                                             <input type="hidden" name="RoleUpdateFlag" value="true" />
                                         }
                                         @foreach (var role in Model.AvailableRoles)
@@ -107,7 +107,7 @@
                                                 </label>
                                             </div>
                                         }
-                                        <!-- Hidden field to track original roles -->
+                                        <!-- Roles before the edit, so the controller can tell what changed -->
                                         @foreach (var role in Model.CurrentRoles)
                                         {
                                             <input type="hidden" name="CurrentRoles" value="@role" />
@@ -194,14 +194,12 @@
 
                 async function loadUserPermissions() {
             try {
-                // Call the MVC controller action directly (no API gateway needed)
+                // Same-origin MVC action, so the auth cookie is enough and no Bearer token is needed.
                 const url = '/UserManagement/GetUserPermissions?id=@Model.Id';
 
                 $.ajax({
                     url: url,
                     type: 'GET',
-                    // For MVC controller actions, we don't need the Bearer token
-                    // The cookie authentication handles it automatically
                     success: function(data) {
                         console.log('Permissions loaded successfully:', data);
 
@@ -237,7 +235,6 @@
         }
 
         function renderPermissions(permissions) {
-            // Group permissions by category
             const grouped = {};
             permissions.forEach(p => {
                 const category = p.category || 'General';
@@ -249,7 +246,6 @@
 
             let html = '<div class="permissions-list">';
 
-            // Show assigned permissions first
             const assignedPerms = permissions.filter(p => p.isAssigned);
             if (assignedPerms.length > 0) {
                 html += `
@@ -267,7 +263,6 @@
                 html += '</div></div>';
             }
 
-            // Show available permissions by category
             html += '<h6 class="text-primary mb-3"><i class="fas fa-plus-circle"></i> Available Permissions</h6>';
 
             for (const [category, perms] of Object.entries(grouped)) {
@@ -319,14 +314,12 @@
             const message = `Are you sure you want to ${action} the "${permissionName}" permission?`;
 
             if (!confirm(message)) {
-                return; // User cancelled the action
+                return;
             }
 
             try {
-                // Get the authentication token securely
                 const token = await SecureTokenProvider.getToken();
 
-                // Build the proper API URL
                 const endpoint = isGranting ? 'grant-permission' : 'revoke-permission';
                 const apiUrl = AppConfig.buildApiUrl(`auth/users/@Model.Id/${endpoint}`);
 
@@ -338,12 +331,11 @@
                     }),
                     contentType: 'application/json',
                     headers: {
-                        'Authorization': `Bearer ${token}`, // FIX 6: Added missing comma
+                        'Authorization': `Bearer ${token}`,
                         'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
                     },
                     success: function(response) {
                         showToast(`Permission ${action}ed successfully`, 'success');
-                        // Reload the permissions list to show the updated state
                         loadUserPermissions();
                     },
                     error: function(xhr) {

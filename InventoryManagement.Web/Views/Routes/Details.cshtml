@@ -170,7 +170,7 @@
 @section Scripts {
     <script>
     function showImageModal(imageUrl, title) {
-            // Use the global image modal from _Layout
+            // The image modal lives in _Layout.
             $('#globalModalImage').attr('src', imageUrl);
             $('#globalImageModal .modal-title').text(title || 'Image Preview');
             $('#globalImageModal').modal('show');

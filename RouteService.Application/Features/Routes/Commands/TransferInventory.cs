@@ -53,11 +53,9 @@ namespace RouteService.Application.Features.Routes.Commands
             {
                 var dto = request.Dto;
 
-                // Get product info
                 var product = await _productClient.GetProductByIdAsync(dto.ProductId, cancellationToken)
                     ?? throw new RouteException($"Product {dto.ProductId} not found");
 
-                // Get departments info
                 var fromDepartment = await _productClient.GetDepartmentByIdAsync(product.DepartmentId, cancellationToken)
                     ?? throw new RouteException($"Department {product.DepartmentId} not found");
 
@@ -70,7 +68,6 @@ namespace RouteService.Application.Features.Routes.Commands
                 await _unitOfWork.BeginTransactionAsync(cancellationToken);
                 try
                 {
-                    // Prepare image data
                     if (dto.ImageFile != null && dto.ImageFile.Length > 0)
                     {
                         using var ms = new MemoryStream();
@@ -81,7 +78,7 @@ namespace RouteService.Application.Features.Routes.Commands
                         imageUrl = await _imageService.UploadImageAsync(ms, dto.ImageFile.FileName, product.InventoryCode);
                     }
 
-                    // Create product snapshot
+                    // The route keeps the product as it was at transfer time.
                     var productSnapshot = new ProductSnapshot(
                         product.Id,
                         product.InventoryCode,
@@ -90,7 +87,6 @@ namespace RouteService.Application.Features.Routes.Commands
                         product.CategoryName,
                         product.IsWorking);
 
-                    // Create route
                     var route = InventoryRoute.CreateTransfer(
                         productSnapshot,
                         product.DepartmentId,

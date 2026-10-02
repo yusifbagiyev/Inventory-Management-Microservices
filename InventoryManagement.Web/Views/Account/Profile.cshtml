@@ -17,7 +17,7 @@
     </div>
 
     <div class="row">
-        <!-- Left Column - Profile Card -->
+        <!-- Left column -->
         <div class="col-lg-4 mb-4">
             <!-- Profile Summary Card -->
             <div class="card shadow mb-4">
@@ -102,7 +102,7 @@
             </div>
         </div>
 
-        <!-- Right Column - Details -->
+        <!-- Right column -->
         <div class="col-lg-8">
             <!-- Personal Information Card -->
             <div class="card shadow mb-4">
@@ -174,7 +174,6 @@
                 <div class="card-body">
                     @if (Model.Permissions.Any())
                     {
-                        <!-- Group permissions by category -->
                         var permissionsByCategory = Model.Permissions
                         .GroupBy(p => p.Category)
                         .OrderBy(g => g.Key);
@@ -277,17 +276,14 @@
 
 @section Scripts {
     <script>
-        // Permission search functionality
         $(document).ready(function() {
             $('#permissionSearch').on('keyup', function() {
                 const searchTerm = $(this).val().toLowerCase();
 
                 if (searchTerm === '') {
-                    // Show all
                     $('.permission-item').show();
                     $('.permission-category').show();
                 } else {
-                    // Filter permissions
                     $('.permission-item').each(function() {
                         const permissionName = $(this).data('permission-name');
                         if (permissionName.includes(searchTerm)) {
@@ -297,12 +293,11 @@
                         }
                     });
 
-                    // Hide categories with no visible items
+                    // Hide empty categories and open the ones with matches.
                     $('.permission-category').each(function() {
                         const visibleItems = $(this).find('.permission-item:visible').length;
                         if (visibleItems > 0) {
                             $(this).show();
-                            // Expand the accordion
                             $(this).find('.accordion-collapse').addClass('show');
                             $(this).find('.accordion-button').removeClass('collapsed');
                         } else {
@@ -315,7 +310,6 @@
 
         function logoutAllDevices() {
             if (confirm('Are you sure you want to logout from all devices?')) {
-                // Implement logout from all devices
                 alert('Logout from all devices functionality coming soon!');
             }
         }

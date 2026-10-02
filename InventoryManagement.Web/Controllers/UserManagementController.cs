@@ -298,7 +298,7 @@ namespace InventoryManagement.Web.Controllers
         }
 
 
-        // AJAX endpoints for better UX
+        // Endpoints below are called from the page's scripts.
         [HttpGet]
         public async Task<JsonResult?> GetUser(int id)
         {
@@ -338,18 +338,15 @@ namespace InventoryManagement.Web.Controllers
             {
                 if (id == 0)
                     return null;
-                // Get user details to get their current permissions
                 var user = await _apiService.GetAsync<UserDto>($"/api/auth/users/{id}");
                 if(user == null)
                 {
                     return Json(new { error = "User not found" });
                 }
 
-                // Get all available permissions
                 var allPermissions = await _apiService.GetAsync<List<PermissionViewModel>>("/api/auth/permissions")
                     ?? [];
 
-                // Create a simple structure showing which permissions are assigned
                 var permissionStatus=allPermissions.Select(p=>new
                 {
                     p.Id,
@@ -391,7 +388,6 @@ namespace InventoryManagement.Web.Controllers
         {
             try
             {
-                // Get current user permissions first
                 var currentPermissions = await _apiService.GetAsync<List<string>>($"/api/auth/users/{id}/direct-permissions");
 
                 var url = model.IsGranting

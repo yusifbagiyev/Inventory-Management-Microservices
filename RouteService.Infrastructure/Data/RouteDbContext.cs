@@ -23,7 +23,7 @@ namespace RouteService.Infrastructure.Data
                     snapshot.Property(s => s.Vendor).HasColumnName("Vendor").HasMaxLength(100);
                     snapshot.Property(s => s.CategoryName).HasColumnName("CategoryName").HasMaxLength(100);
                     snapshot.Property(s => s.IsWorking).HasColumnName("IsWorking");
-                    // Add index inside the owned entity configuration
+                    // The index has to be declared on the owned type, not on the route.
                     snapshot.HasIndex(s => s.ProductId).HasDatabaseName("IX_InventoryRoutes_ProductId");
                 });
 

@@ -29,7 +29,7 @@ namespace NotificationService.Application.Hubs
         {
             try
             {
-                // Get user ID from claims - handle both possible claim types
+                // Tokens carry the id either as UserId or as NameIdentifier.
                 var userId = Context.User?.FindFirst("UserId")?.Value
                     ?? Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -40,15 +40,12 @@ namespace NotificationService.Application.Hubs
 
                 if (!string.IsNullOrEmpty(userId))
                 {
-                    // Add to connection tracking
                     await _connectionManager.AddConnection(userId, Context.ConnectionId);
 
-                    // Add to user-specific group for targeted notifications
                     var userGroup = $"user-{userId}";
                     await Groups.AddToGroupAsync(Context.ConnectionId, userGroup);
                     _logger.LogInformation($"User {userName} (ID: {userId}) connected with connection {Context.ConnectionId}, joined group {userGroup}");
 
-                    // Add to role-based groups for role-specific notifications
                     var roles = Context.User?.FindAll(ClaimTypes.Role)?.Select(c => c.Value) ?? Enumerable.Empty<string>();
                     var roleGroups = new List<string>();
 
@@ -60,7 +57,6 @@ namespace NotificationService.Application.Hubs
                         _logger.LogInformation($"User {userName} added to role group: {roleGroup}");
                     }
 
-                    // Send connection confirmation back to the client
                     await Clients.Caller.SendAsync("ConnectionEstablished", new
                     {
                         connectionId = Context.ConnectionId,
@@ -72,7 +68,7 @@ namespace NotificationService.Application.Hubs
                         message = "Connected to notification service successfully"
                     });
 
-                    // Send any pending notifications
+                    // Replay what arrived while the user was offline.
                     await SendPendingNotifications(userId);
                 }
                 else
@@ -113,11 +109,9 @@ namespace NotificationService.Application.Hubs
                     return;
                 }
 
-                // Get a scoped service provider to access the repository
                 using var scope= _serviceProvider.CreateScope();
                 var notificationRepository = scope.ServiceProvider.GetRequiredService<INotificationRepository>();
 
-                // Fetch unread notifications for the user
                 var unreadNotifications = await notificationRepository.GetByUserIdAsync(userIdInt, unreadOnly: true);
 
                 if (!unreadNotifications.Any())
@@ -128,10 +122,8 @@ namespace NotificationService.Application.Hubs
 
                 _logger.LogInformation($"Sending {unreadNotifications.Count()} pending notifications to user {userId}");
 
-                // Sort notifications by creation date (oldest first)
                 var sortedNotifications = unreadNotifications.OrderBy(n => n.CreatedAt);
 
-                // Send each notification to the user
                 foreach(var notification in sortedNotifications)
                 {
                     var notificationDto = new
@@ -145,14 +137,12 @@ namespace NotificationService.Application.Hubs
                         data = notification.Data
                     };
 
-                    // Send to the specific caller (the user who just connected)
                     await Clients.Caller.SendAsync("ReceivePendingNotification", notificationDto);
 
-                    // Small delay between notifications to avoid overwhelming the client
+                    // A short pause so the client is not flooded.
                     await Task.Delay(100);
                 }
 
-                // Send a summary message
                 await Clients.Caller.SendAsync("PendingNotificationsComplete", new
                 {
                     count = unreadNotifications.Count(),

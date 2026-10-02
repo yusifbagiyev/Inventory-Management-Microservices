@@ -17,15 +17,12 @@ namespace ApiGateway.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // Generate correlation ID for request tracking
             var correlationId = context.TraceIdentifier;
 
-            // Start timing the request
             var stopwatch = Stopwatch.StartNew();
 
             try
             {
-                // Only log at Debug level for normal requests
                 _logger.LogDebug(
                     "Request started: {Method} {Path} | CorrelationId: {CorrelationId}",
                     context.Request.Method,
@@ -36,7 +33,7 @@ namespace ApiGateway.Middleware
 
                 stopwatch.Stop();
 
-                // Only log completed requests if they took a long time or had errors
+                // Log only slow or failed requests to keep Seq quiet.
                 if (stopwatch.ElapsedMilliseconds > 1000 || context.Response.StatusCode >= 400)
                 {
                     _logger.LogInformation(
@@ -79,7 +76,7 @@ namespace ApiGateway.Middleware
             {
                 stopwatch.Stop();
 
-                // Downstream service error - this is common with microservices
+                // A downstream service is down or unreachable.
                 _logger.LogError(ex,
                     "Downstream service error: {Method} {Path} | Duration: {Duration}ms | CorrelationId: {CorrelationId} | Message: {Message}",
                     context.Request.Method,
@@ -95,7 +92,6 @@ namespace ApiGateway.Middleware
             {
                 stopwatch.Stop();
 
-                // Unexpected error - log full details
                 _logger.LogError(ex,
                     "UNHANDLED EXCEPTION: {Method} {Path} | Duration: {Duration}ms | CorrelationId: {CorrelationId} | ExceptionType: {ExceptionType} | Message: {Message} | StackTrace: {StackTrace}",
                     context.Request.Method,
@@ -118,7 +114,6 @@ namespace ApiGateway.Middleware
             HttpStatusCode statusCode,
             string userMessage)
         {
-            // Prevent writing to response if already started
             if (context.Response.HasStarted)
             {
                 return;
@@ -144,7 +139,6 @@ namespace ApiGateway.Middleware
         }
     }
 
-    // Extension method for easy registration
     public static class GlobalExceptionMiddlewareExtensions
     {
         public static IApplicationBuilder UseGlobalExceptionHandler(this IApplicationBuilder builder)

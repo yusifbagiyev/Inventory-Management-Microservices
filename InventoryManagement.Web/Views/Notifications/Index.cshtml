@@ -15,7 +15,7 @@
         </div>
     </div>
 
-    <!-- Advanced Filter Section -->
+    <!-- Filters -->
     <div class="card mb-4 shadow-sm">
         <div class="card-header bg-light">
             <h5 class="mb-0">
@@ -65,14 +65,14 @@
         </div>
     </div>
 
-    <!-- Notifications List with Virtual Scrolling -->
+    <!-- Notification list, shown a page at a time as it scrolls -->
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <div id="notificationsList" class="notifications-container" style="height: 600px; overflow-y: auto;">
                 <div id="notificationsContent">
                     @if (Model.Notifications.Any())
                     {
-                        @foreach (var notification in Model.Notifications.Take(50)) // Initial load of 50 items
+                        @foreach (var notification in Model.Notifications.Take(50)) // First 50 on load
                         {
                             <div class="notification-item @(notification.IsRead ? "" : "unread")"
                                  data-id="@notification.Id"
@@ -144,7 +144,6 @@
         let filteredNotifications = [];
 
         $(document).ready(function() {
-            // Initialize date range picker
             $('#dateRangeFilter').daterangepicker({
                 autoUpdateInput: false,
                 locale: {
@@ -161,18 +160,16 @@
                 $(this).val('');
             });
 
-            // Store all notifications for client-side filtering
+            // Filters work on the items already in the page, not on the server.
             allNotifications = $('.notification-item').toArray();
             updateCounts();
 
-            // Implement infinite scrolling
             $('#notificationsList').on('scroll', function() {
                 if ($(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight - 100) {
                     loadMoreNotifications();
                 }
             });
 
-            // Real-time search
             $('#searchFilter').on('input', function() {
                 applyFilters();
             });
@@ -188,17 +185,14 @@
                 const $item = $(item);
                 let show = true;
 
-                // Status filter
                 if (status && $item.data('read') !== status) {
                     show = false;
                 }
 
-                // Type filter
                 if (type && $item.data('type') !== type) {
                     show = false;
                 }
 
-                // Date range filter
                 if (dateRange && dateRange.includes(' - ')) {
                     const dates = dateRange.split(' - ');
                     const itemDate = moment($item.data('date'));
@@ -210,7 +204,6 @@
                     }
                 }
 
-                // Search filter
                 if (searchTerm && !$item.text().toLowerCase().includes(searchTerm)) {
                     show = false;
                 }

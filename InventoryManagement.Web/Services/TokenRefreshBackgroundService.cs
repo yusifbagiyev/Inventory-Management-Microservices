@@ -28,12 +28,12 @@ namespace InventoryManagement.Web.Services
                     {
                         var httpContextAccessor = scope.ServiceProvider.GetService<IHttpContextAccessor>();
 
-                        // Only refresh if there's an active HTTP context (user is active)
+                        // Without a request there is no signed-in user whose token could be refreshed.
                         if (httpContextAccessor?.HttpContext != null)
                         {
                             var tokenManager = scope.ServiceProvider.GetRequiredService<ITokenManager>();
 
-                            // This will check and refresh if needed
+                            // Refreshes the token when it is close to expiry.
                             await tokenManager.GetValidTokenAsync();
                         }
                     }

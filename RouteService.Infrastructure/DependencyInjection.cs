@@ -13,20 +13,16 @@ namespace RouteService.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            // Database
             services.AddDbContext<RouteDbContext>(options =>
                 options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"),
                 b => b.MigrationsAssembly(typeof(RouteDbContext).Assembly.FullName)));
 
 
-            //Add HttpContextAccessor
             services.AddHttpContextAccessor();
 
-            // Repositories
             services.AddScoped<IInventoryRouteRepository, InventoryRouteRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-            // Services
             services.AddSingleton<RabbitMQConsumer>();
             services.AddHostedService(provider => provider.GetRequiredService<RabbitMQConsumer>());
             services.AddHttpClient<IProductServiceClient, ProductServiceClient>();

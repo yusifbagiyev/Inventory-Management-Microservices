@@ -7,10 +7,9 @@
             if (string.IsNullOrWhiteSpace(text))
                 return string.Empty;
 
-            // Convert to lowercase first
             text = text.ToLowerInvariant();
 
-            // Replace Azerbaijani special characters with their ASCII equivalents
+            // Fold Azerbaijani letters to ASCII so a search typed without them still matches.
             var replacements = new Dictionary<char, char>
             {
                 {'ə', 'e'}, {'Ə', 'e'},

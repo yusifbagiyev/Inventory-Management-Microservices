@@ -224,7 +224,6 @@ namespace ProductService.API.Controllers
         {
             try
             {
-                // Create a DTO without the file
                 var dto = new CreateProductDto
                 {
                     InventoryCode = productData.GetProperty("inventoryCode").GetInt32(),
@@ -257,7 +256,6 @@ namespace ProductService.API.Controllers
         {
             try
             {
-                // Create a DTO without the file
                 var dto = new UpdateProductDto
                 {
                     Model = updateData.TryGetProperty("model", out var model) ? model.GetString() : "",
@@ -318,17 +316,14 @@ namespace ProductService.API.Controllers
         [Permission(AllPermissions.ProductUpdate)]
         public async Task<IActionResult> UpdateInventoryCode(int id, [FromBody] UpdateInventoryCodeDto dto)
         {
-            // Add logic to update only inventory code
             var product = await _mediator.Send(new GetProductByIdQuery(id));
             if (product == null)
                 return NotFound();
 
-            // Check if new code already exists
             var existing = await _mediator.Send(new GetProductByInventoryCodeQuery(dto.InventoryCode));
             if (existing != null && existing.Id != id)
                 return BadRequest(new { error = "Inventory code already exists" });
 
-            // Update only the inventory code
             await _mediator.Send(new UpdateProductInventoryCode.Command(id, dto.InventoryCode));
             return NoContent();
         }
@@ -371,60 +366,28 @@ namespace ProductService.API.Controllers
 
         public record DepartmentStatisticsDto
         {
-            /// <summary>
-            /// Total number of products assigned to this department
-            /// </summary>
             public int TotalProducts { get; set; }
 
-            /// <summary>
-            /// Number of products marked as active/available
-            /// </summary>
             public int ActiveProducts { get; set; }
 
-            /// <summary>
-            /// Number of products that are currently in working condition
-            /// </summary>
             public int WorkingProducts { get; set; }
 
-            /// <summary>
-            /// Number of products marked as new items
-            /// </summary>
             public int NewItems { get; set; }
 
-            /// <summary>
-            /// Count of unique workers who have products assigned to them
-            /// </summary>
+            /// <summary>Distinct workers holding at least one product here.</summary>
             public int AssignedWorkers { get; set; }
 
-            /// <summary>
-            /// Breakdown of products by category with counts
-            /// </summary>
             public List<CategoryBreakdownDto> CategoryBreakdown { get; set; } = new();
 
-            /// <summary>
-            /// List of all unique workers in this department
-            /// </summary>
             public List<string> WorkerList { get; set; } = new();
         }
 
-        /// <summary>
-        /// Represents the count of products within a specific category
-        /// </summary>
         public record CategoryBreakdownDto
         {
-            /// <summary>
-            /// Name of the category
-            /// </summary>
             public string Category { get; set; } = string.Empty;
 
-            /// <summary>
-            /// Number of products in this category
-            /// </summary>
             public int Count { get; set; }
 
-            /// <summary>
-            /// Percentage of total products this category represents
-            /// </summary>
             public decimal Percentage { get; set; }
         }
     }

@@ -8,7 +8,6 @@
     var startDate = ViewBag.PeriodStartDate as DateTime?;
     var endDate = ViewBag.PeriodEndDate as DateTime?;
 
-    // Determine period display name
     var periodName = currentPeriod switch
     {
         "last7days" => "Last 7 Days",

@@ -5,7 +5,7 @@
 }
 
 <div class="container-fluid px-4">
-    <!-- Modern Breadcrumb -->
+    <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb bg-transparent px-0">
             <li class="breadcrumb-item"><a href="/Home/Dashboard" class="text-decoration-none">Dashboard</a></li>
@@ -14,7 +14,7 @@
         </ol>
     </nav>
 
-    <!-- Department Header Card with modern gradient -->
+    <!-- Department header -->
     <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
         <div class="card-body text-white p-4">
             <div class="row align-items-center">
@@ -107,7 +107,7 @@
         </div>
     </div>
 
-    <!-- Products Table Card with improved layout -->
+    <!-- Products table -->
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white border-0 py-3">
             <div class="row align-items-center">
@@ -237,7 +237,7 @@
 @functions {
     private string GetCategoryColor(string? categoryName)
     {
-        // Generate consistent colors for categories
+        // String hashes are randomized per process, so a category keeps its colour only until the app restarts.
         var colors = new[] { "#667eea", "#764ba2", "#f093fb", "#4facfe", "#43e97b", "#fa709a", "#30cfd0", "#c471ed" };
         if (string.IsNullOrEmpty(categoryName)) return colors[0];
 
@@ -250,10 +250,9 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // Initialize DataTable with modern styling
             $('#departmentProductsTable').DataTable({
                 pageLength: 25,
-                order: [[1, 'asc'], [0, 'asc']], // Sort by category, then code
+                order: [[1, 'asc'], [0, 'asc']], // Category, then inventory code
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search products...",

@@ -16,7 +16,7 @@ namespace InventoryManagement.Web.Services
         private readonly ILogger<ApiService> _logger;
         private readonly ITokenManager _tokenManager;
 
-        // Track if we've already attempted refresh for this request
+        // Flag in HttpContext.Items so one request refreshes the token at most once.
         private readonly string REQUEST_REFRESH_KEY = "TokenRefreshAttempted";
         public ApiService(
             HttpClient httpClient,
@@ -46,11 +46,11 @@ namespace InventoryManagement.Web.Services
 
             if (!string.IsNullOrEmpty(forwardedFor))
             {
-                // Nginx already set this - pass it along
+                // Nginx already started the chain, so pass it on as is.
                 _httpClient.DefaultRequestHeaders.Remove("X-Forwarded-For");
                 _httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", forwardedFor);
 
-                // Also set X-Real-IP to the first IP in the chain
+                // The first address in the chain is the real client.
                 var realIp = forwardedFor.Split(',')[0].Trim();
                 _httpClient.DefaultRequestHeaders.Remove("X-Real-IP");
                 _httpClient.DefaultRequestHeaders.Add("X-Real-IP", realIp);
@@ -59,7 +59,7 @@ namespace InventoryManagement.Web.Services
             }
             else if (!string.IsNullOrEmpty(clientIp))
             {
-                // Start the X-Forwarded-For chain
+                // No proxy in front, so this app starts the chain.
                 _httpClient.DefaultRequestHeaders.Remove("X-Forwarded-For");
                 _httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", clientIp);
 
@@ -73,20 +73,17 @@ namespace InventoryManagement.Web.Services
 
         private bool SetAuthorizationHeader()
         {
-            // Clear any existing authorization header
             _httpClient.DefaultRequestHeaders.Authorization = null;
 
             try
             {
                 var context = _httpContextAccessor.HttpContext;
 
-                // SECURITY: Token is only available from HttpContext.Items (set by middleware)
-                // or from session - never from JavaScript
+                // Middleware puts the token in Items, the session is the fallback. JavaScript never supplies it.
                 var token = context?.Items["JwtToken"] as string;
 
                 if (string.IsNullOrEmpty(token))
                 {
-                    // Fallback to session if not in Items
                     token = context?.Session.GetString("JwtToken");
                 }
 
@@ -112,7 +109,6 @@ namespace InventoryManagement.Web.Services
 
         public async Task<T?> GetAsync<T>(string endpoint)
         {
-            // Ensure we have a valid token
             if (!SetAuthorizationHeader())
             {
                 _logger.LogWarning("Cannot proceed without valid token for {Endpoint}", endpoint);
@@ -123,28 +119,24 @@ namespace InventoryManagement.Web.Services
 
             var response = await _httpClient.GetAsync(endpoint);
 
-            // Handle 401 with single retry after refresh
+            // On a 401 refresh the token once and retry.
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
                 var context = _httpContextAccessor.HttpContext;
 
-                // Check if we've already tried refreshing for this request
                 if (context?.Items.ContainsKey(REQUEST_REFRESH_KEY) != true)
                 {
                     _logger.LogInformation("Received 401, attempting token refresh for {Endpoint}", endpoint);
 
-                    // Mark that we've attempted refresh
                     if (context != null)
                     {
                         context.Items[REQUEST_REFRESH_KEY] = true;
                     }
 
-                    // Try to refresh
                     var refreshed = await _tokenManager.RefreshTokenAsync();
 
                     if (refreshed && SetAuthorizationHeader())
                     {
-                        // Retry the request with new token
                         response = await _httpClient.GetAsync(endpoint);
 
                         if (response.IsSuccessStatusCode)
@@ -237,7 +229,7 @@ namespace InventoryManagement.Web.Services
 
             if (response.IsSuccessStatusCode)
             {
-                // Check if response indicates approval even with 200 OK
+                // Some services answer an approval request with 200 instead of 202.
                 if (IsApprovalResponse(responseContent))
                 {
                     return HandleApprovalResponse<T>(responseContent);
@@ -251,7 +243,6 @@ namespace InventoryManagement.Web.Services
                 };
             }
 
-            // For non-success responses, return structured error
             return await ProcessResponse<T>(response, responseContent);
         }
 
@@ -310,7 +301,6 @@ namespace InventoryManagement.Web.Services
 
             if (response.IsSuccessStatusCode)
             {
-                // Check if response indicates approval even with 200 OK
                 if (IsApprovalResponse(responseContent))
                 {
                     return HandleApprovalResponse<T>(responseContent);
@@ -389,7 +379,6 @@ namespace InventoryManagement.Web.Services
 
             if (response.IsSuccessStatusCode)
             {
-                // Check if response indicates approval even with 200 OK
                 if (IsApprovalResponse(responseContent))
                 {
                     return HandleApprovalResponse<T>(responseContent);
@@ -466,7 +455,6 @@ namespace InventoryManagement.Web.Services
 
             if (response.IsSuccessStatusCode)
             {
-                // Check if response indicates approval even with 200 OK
                 if (IsApprovalResponse(responseContent))
                 {
                     return HandleApprovalResponse<TResponse>(responseContent);
@@ -545,7 +533,6 @@ namespace InventoryManagement.Web.Services
         {
             var content= new MultipartFormDataContent();
 
-            // Add DTO properties first
             if(dataDto != null)
             {
                 var properties = dataDto.GetType().GetProperties();
@@ -558,7 +545,6 @@ namespace InventoryManagement.Web.Services
                 }
             }
 
-            // Add form files
             foreach(var file in form.Files)
             {
                 if (file.Length > 0)
@@ -569,7 +555,7 @@ namespace InventoryManagement.Web.Services
                 }
             }
 
-            // Add remaining form fields
+            // Only form fields the DTO has not already sent.
             foreach(var field in form)
             {
                 if(field.Key=="ImageFile"||
@@ -586,7 +572,6 @@ namespace InventoryManagement.Web.Services
 
         private async Task<ApiResponse<T>> ProcessResponse<T>(HttpResponseMessage response, string responseContent)
         {
-            // Handle approval responses
             if (response.StatusCode == HttpStatusCode.Accepted|| IsApprovalResponse(responseContent))
             {
                 return HandleApprovalResponse<T>(responseContent);
@@ -602,9 +587,8 @@ namespace InventoryManagement.Web.Services
                 };
             }
 
-            await Task.Delay(1); // Simulate async work if needed
+            await Task.Delay(1);
 
-            // Handle NoContent responses
             if (response.StatusCode == HttpStatusCode.NoContent)
             {
                 return new ApiResponse<T>
@@ -704,7 +688,6 @@ namespace InventoryManagement.Web.Services
             {
                 _logger.LogError(ex, "Error parsing error message from response");
             }
-            // Return status-based default message
             return GetDefaultErrorMessage(statusCode);
         }
 

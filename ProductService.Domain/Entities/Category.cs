@@ -9,7 +9,6 @@
         public DateTime CreatedAt { get; private set; }
         public DateTime? UpdatedAt { get; private set; }
 
-        // Navigation property
         public ICollection<Product> Products { get; private set; } = [];
 
         // For EF Core

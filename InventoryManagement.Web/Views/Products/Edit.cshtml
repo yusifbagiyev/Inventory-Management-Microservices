@@ -85,7 +85,6 @@
                         <div class="mb-3">
                             <label class="form-label">Product Image</label>
 
-                            <!-- Replace the current image display section -->
                             @if (!string.IsNullOrEmpty(Model.ImageUrl))
                             {
                                 <div id="currentImageContainer" class="mb-3">
@@ -155,44 +154,34 @@
     <script src="~/js/ajaxHandler.js" asp-append-version="true"></script>
     <script>
         $(document).ready(function() {
-            // Our submission protection flag
+            // Stops a double click from sending the update twice.
             let isSubmitting = false;
 
-            // Get references to elements we'll need
             const $form = $('form');
             const $submitBtn = $('#submitBtn, button[type="submit"]').first();
             const originalButtonHtml = $submitBtn.html();
 
-            // Initialize the AjaxHandler for this form
             AjaxHandler.handleForm('form', {
                 successMessage: 'Product updated successfully!',
                 successRedirect: '@Url.Action("Index")',
                 redirectDelay: 1500,
 
                 onBeforeSubmit: function(form) {
-                    // FIRST LINE OF DEFENSE: Check if we're already submitting
-                    // This check happens immediately, before anything else
-                    // Think of it as a bouncer at a club - if someone's already going in,
-                    // they stop others from entering until the first person is through
                     if (isSubmitting) {
                         console.log('Product update already in progress, blocking duplicate');
-                        return false; // Stop the submission attempt
+                        return false;
                     }
 
-                    // LOCK THE DOOR: Set the flag to prevent any other submissions
                     isSubmitting = true;
                     console.log('Product update submission started');
 
-                    // Let the submission proceed
-                    // The AjaxHandler will handle validation, button state, etc.
                     return true;
                 },
 
                 onSuccess: function(response) {
                     console.log('Product update successful:', response);
 
-                    // Check if this became an approval request
-                    // This happens when a user updates but doesn't have direct permission
+                    // Without the direct update permission the change goes to approval instead.
                     if (response.isApprovalRequest || response.approvalRequestId) {
                         showToast(
                             response.message || 'Product update submitted for approval',
@@ -200,34 +189,28 @@
                             3000
                         );
 
-                        // Redirect after showing the approval message
                         setTimeout(() => {
                             window.location.href = '@Url.Action("Index")';
                         }, 2000);
 
-                        return false; // We're handling the redirect
+                        return false; // Skip AjaxHandler's own redirect
                     }
 
-                    // Normal success - direct update
-                    return true; // Let AjaxHandler handle the success flow
+                    return true;
                 },
 
                 onError: function(errorMessage, response) {
                     console.error('Product update error:', errorMessage);
 
-                    // UNLOCK THE DOOR: Reset the flag so the user can try again
-                    // This is crucial - without this, the user would be permanently locked out
+                    // Unlock so the form can be fixed and sent again.
                     isSubmitting = false;
 
-                    // Restore the button to its original state
                     $submitBtn.prop('disabled', false).html(originalButtonHtml);
 
-                    // Error message will be shown by AjaxHandler
+                    // AjaxHandler shows the message itself.
                 }
             });
         });
-
-        // Image handling functions - these are separate from submission logic
 
         function removeCurrentImage() {
             $('#currentImageContainer').hide();
@@ -243,7 +226,7 @@
                 };
                 reader.readAsDataURL(input.files[0]);
 
-                // If there's a current image, hide it since we're replacing it
+                // A new file replaces the current image, so mark that one for removal.
                 if ($('#currentImageContainer').length) {
                     $('#currentImageContainer').hide();
                     $('#RemoveImage').val('true');
@@ -251,7 +234,6 @@
             }
         }
 
-        // Image modal function for viewing the full-size image
         function showImageModal(imageUrl, title) {
             $('#globalModalImage').attr('src', imageUrl);
             $('#globalImageModal .modal-title').text(title || 'Image Preview');

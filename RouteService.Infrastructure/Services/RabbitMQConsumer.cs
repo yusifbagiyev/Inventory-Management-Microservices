@@ -115,13 +115,12 @@ namespace RouteService.Infrastructure.Services
                 catch (FluentValidation.ValidationException ex)
                 {
                     _logger.LogError(ex, "Validation error - message will be discarded");
-                    // Don't requeue validation errors
+                    // A message that fails validation would fail again, so it is dropped.
                     _channel?.BasicNack(ea.DeliveryTag, false, false);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error processing product created event");
-                    // Requeue only for unexpected errors
                     _channel?.BasicNack(ea.DeliveryTag, false, true);
                 }
             };
@@ -144,7 +143,7 @@ namespace RouteService.Infrastructure.Services
 
             string? imageUrl = null;
 
-            // Upload image if data is provided
+            // The route keeps its own copy of the photo.
             if (productCreatedEvent.ImageData != null && productCreatedEvent.ImageData.Length > 0)
             {
                 using var stream = new MemoryStream(productCreatedEvent.ImageData);
@@ -214,13 +213,12 @@ namespace RouteService.Infrastructure.Services
             var imageService = scope.ServiceProvider.GetRequiredService<IImageService>();
             var productClient = scope.ServiceProvider.GetRequiredService<IProductServiceClient>();
 
-            // Get current product details
+            // The event carries the old values. The current ones come from ProductService.
             var product = await productClient.GetProductByIdAsync(receivedProduct.Product.Id);
             if (product == null) return;
 
             string? imageUrl = null;
 
-            // Upload image if data is provided
             if (receivedProduct.ImageData != null && receivedProduct.ImageData.Length > 0)
             {
                 using var stream = new MemoryStream(receivedProduct.ImageData);
@@ -251,7 +249,6 @@ namespace RouteService.Infrastructure.Services
                 receivedProduct.Product.IsNewItem,
                 receivedProduct.Product.IsWorking);
 
-            // Create an update route entry
             var route = InventoryRoute.CreateUpdate(
                 changedProduct,
                 updatedProduct,

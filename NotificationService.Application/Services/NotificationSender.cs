@@ -31,7 +31,6 @@ namespace NotificationService.Application.Services
 
         public async Task SendToUserAsync(int userId,string type,string title,string message,object? data = null)
         {
-            //Save to the database
             var notification = new Notification(
                 userId,
                 type,
@@ -42,7 +41,6 @@ namespace NotificationService.Application.Services
             await _repository.AddAsync(notification);
             await _unitOfWork.SaveChangesAsync();
 
-            //Send via SignalR
             await _hubContext.Clients.Group($"user-{userId}").SendAsync("ReceiveNotification", new
             {
                 notification.Id,
@@ -55,12 +53,10 @@ namespace NotificationService.Application.Services
         }
         public async Task SendToRoleAsync(string role, string type, string title, string message, object? data = null)
         {
-            // Get users in role from identity service
             var users = await _userService.GetUsersAsync(role);
 
             _logger.LogInformation($"Sending notification to {users.Count} users in role {role}");
 
-            // Save notification for each user
             foreach (var user in users)
             {
                 var notification = new Notification(
@@ -74,10 +70,9 @@ namespace NotificationService.Application.Services
                 await _unitOfWork.SaveChangesAsync();
             }
 
-            // Send to role group via SignalR
             await _hubContext.Clients.Group($"role-{role}").SendAsync("ReceiveNotification", new
             {
-                Id = 0, // Temporary ID for broadcast
+                Id = 0, // Each user has their own stored row, so the broadcast has no single id.
                 Type = type,
                 Title = title,
                 Message = message,

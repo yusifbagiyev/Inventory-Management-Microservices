@@ -9,10 +9,10 @@
         public string ActionData { get; set; } = string.Empty;
         public int RequestedById { get; set; }
         public string RequestedByName { get; set; } = string.Empty;
-        public int? ApprovedById { get; set; }  // Add this
-        public string? ApprovedByName { get; set; }  // Add this
+        public int? ApprovedById { get; set; }
+        public string? ApprovedByName { get; set; }
         public string Status { get; set; } = string.Empty;
-        public string? RejectionReason { get; set; }  // Add this
+        public string? RejectionReason { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? ProcessedAt { get; set; }
         public DateTime? ExecutedAt { get; set; }

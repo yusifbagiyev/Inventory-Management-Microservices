@@ -16,9 +16,6 @@ namespace InventoryManagement.Web.Controllers
         }
 
 
-        /// <summary>
-        /// Checks if the current request is an AJAX request
-        /// </summary>
         protected bool IsAjaxRequest()
         {
             return Request.Headers["X-Requested-With"] == "XMLHttpRequest";
@@ -26,19 +23,16 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Handles API responses uniformly for both AJAX and traditional requests
-        /// </summary>
+        /// <summary>Returns JSON for AJAX calls, otherwise redirects to the given action.</summary>
         protected IActionResult HandleApiResponse<T>(ApiResponse<T> response, string redirectAction)
         {
             if (IsAjaxRequest())
             {
-                // Return JSON with proper status code
+                // A request sent for approval is not a success, but it isn't an error either.
                 if (!response.IsSuccess && !response.IsApprovalRequest)
                 {
-                    Response.StatusCode = 400; // Set proper error status
+                    Response.StatusCode = 400;
                 }
-                // For AJAX requests, return JSON
                 return Json(new
                 {
                     isSuccess = response.IsSuccess,
@@ -51,9 +45,7 @@ namespace InventoryManagement.Web.Controllers
             return RedirectToAction(redirectAction);
         }
 
-        /// <summary>
-        /// Handles errors uniformly
-        /// </summary>
+        /// <summary>Logs the error and sends it back as JSON for AJAX calls or through ModelState for forms.</summary>
         protected IActionResult HandleError(string errorMessage, object? model = null,
             Dictionary<string, string>? fieldErrors = null)
         {
@@ -69,7 +61,7 @@ namespace InventoryManagement.Web.Controllers
                     errors = fieldErrors
                 };
 
-                Response.StatusCode = 400; // Bad Request
+                Response.StatusCode = 400;
                 return Json(response);
             }
 
@@ -88,9 +80,7 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Handles exceptions uniformly
-        /// </summary>
+        /// <summary>Turns an exception into a message that is safe to show the user.</summary>
         protected IActionResult HandleException(Exception ex, object? model = null)
         {
             _logger?.LogError(ex, "Exception in {Controller}.{Action}",
@@ -99,7 +89,6 @@ namespace InventoryManagement.Web.Controllers
 
             string userFriendlyMessage = "An unexpected error occurred. Please try again.";
 
-            // Provide more specific messages for common exceptions
             if (ex is UnauthorizedAccessException)
             {
                 userFriendlyMessage = "You don't have permission to perform this action.";
@@ -122,14 +111,11 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Handles validation errors from ModelState
-        /// </summary>
         protected IActionResult HandleValidationErrors(object? model = null)
         {
             if (IsAjaxRequest())
             {
-                Response.StatusCode = 400; // Important: Set error status code
+                Response.StatusCode = 400;
 
                 var errors = ModelState
                     .Where(x => x.Value?.Errors.Count > 0)
@@ -151,9 +137,7 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Parses error message from API response
-        /// </summary>
+        /// <summary>Pulls a readable message out of an API error body, whatever shape it has.</summary>
         protected string ParseApiErrorMessage(string responseContent, string defaultMessage = "Operation failed")
         {
             if (string.IsNullOrWhiteSpace(responseContent))
@@ -161,11 +145,10 @@ namespace InventoryManagement.Web.Controllers
 
             try
             {
-                // Try to parse as JSON
                 using var doc = JsonDocument.Parse(responseContent);
                 var root = doc.RootElement;
 
-                // Check various common error format
+                // Our own errors, ProblemDetails and ModelState output each use a different field.
                 if (root.TryGetProperty("error", out var errorProp))
                     return errorProp.GetString() ?? defaultMessage;
 
@@ -197,7 +180,7 @@ namespace InventoryManagement.Web.Controllers
             }
             catch
             {
-                // If not JSON or parsing fails, return the content if it's short enough
+                // Not JSON. A short plain-text body is fine to show, an HTML error page is not.
                 if (responseContent.Length < 200 && !responseContent.Contains("<"))
                 {
                     return responseContent;
@@ -209,9 +192,6 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Creates a standardized JSON response for AJAX requests
-        /// </summary>
         protected IActionResult AjaxResponse(bool success, string message, object? data = null,
             Dictionary<string, string[]>? errors = null)
         {
@@ -226,9 +206,7 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Helper to get current user ID
-        /// </summary>
+        /// <summary>Returns 0 when the user has no id claim.</summary>
         protected int GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -237,9 +215,6 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Helper to get current username
-        /// </summary>
         protected string GetCurrentUserName()
         {
             return User.Identity?.Name ?? "Unknown";

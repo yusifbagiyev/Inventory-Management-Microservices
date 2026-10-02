@@ -100,13 +100,12 @@ namespace InventoryManagement.Web.Controllers
                 if (category == null)
                     return RedirectToAction("NotFound", "Home", "?statusCode=404");
 
-                // Get products for this category
+                // One oversized page, because the details page lists every product of the category.
                 var products = await _apiService.GetAsync<PagedResultDto<ProductViewModel>>(
                     $"api/products?pageSize=10000&pageNumber=1&categoryId={id}");
 
                 var categoryProducts = products?.Items ?? new List<ProductViewModel>();
 
-                // Update the image URLs for display
                 foreach (var product in categoryProducts)
                 {
                     if (!string.IsNullOrEmpty(product.ImageUrl))

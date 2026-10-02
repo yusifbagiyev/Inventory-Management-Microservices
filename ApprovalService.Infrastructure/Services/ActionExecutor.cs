@@ -58,6 +58,7 @@ namespace ApprovalService.Infrastructure.Services
             }
         }
 
+        // A short-lived admin token, so the target service runs the action directly instead of asking for approval again.
         private void AddAuthorizationHeader()
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -102,10 +103,9 @@ namespace ApprovalService.Infrastructure.Services
                 var jsonDoc = JsonDocument.Parse(actionData);
                 var root = jsonDoc.RootElement;
 
-                // Extract product data from either nested or flat structure
+                // Older requests nest the fields under ProductData, newer ones keep them flat.
                 JsonElement productElement = GetProductElement(root);
 
-                // Build the product DTO from the JSON
                 var inventoryCode = GetIntProperty(productElement, "inventoryCode", "InventoryCode");
                 var model = GetStringProperty(productElement, "model", "Model");
                 var vendor = GetStringProperty(productElement, "vendor", "Vendor");
@@ -117,18 +117,15 @@ namespace ApprovalService.Infrastructure.Services
                 var categoryId = GetIntProperty(productElement, "categoryId", "CategoryId");
                 var departmentId = GetIntProperty(productElement, "departmentId", "DepartmentId");
 
-                // Check for image data
                 var imageData = GetImageData(productElement);
                 var imageFileName = GetImageFileName(productElement);
 
                 if (imageData != null && imageFileName != null)
                 {
-                    // When we have an image, use multipart form data
                     _logger.LogInformation($"Creating product {inventoryCode} with image {imageFileName}");
 
                     using var formContent = new MultipartFormDataContent();
 
-                    // Add all form fields
                     formContent.Add(new StringContent(inventoryCode.ToString()), "InventoryCode");
                     formContent.Add(new StringContent(model), "Model");
                     formContent.Add(new StringContent(vendor), "Vendor");
@@ -140,7 +137,6 @@ namespace ApprovalService.Infrastructure.Services
                     formContent.Add(new StringContent(categoryId.ToString()), "CategoryId");
                     formContent.Add(new StringContent(departmentId.ToString()), "DepartmentId");
 
-                    // Add image file
                     var imageContent = new ByteArrayContent(imageData);
                     imageContent.Headers.ContentType = new MediaTypeHeaderValue(GetMimeType(imageFileName));
                     formContent.Add(imageContent, "ImageFile", imageFileName);
@@ -155,7 +151,6 @@ namespace ApprovalService.Infrastructure.Services
                 }
                 else
                 {
-                    // Without image, use JSON
                     _logger.LogInformation($"Creating product {inventoryCode} without image");
 
                     var productDto = new
@@ -198,7 +193,6 @@ namespace ApprovalService.Infrastructure.Services
                 var jsonDoc = JsonDocument.Parse(actionData);
                 var root = jsonDoc.RootElement;
 
-                //Extract ProductId
                 var productId = GetIntProperty(root, "productId", "ProductId");
                 if (productId == 0)
                 {
@@ -206,10 +200,8 @@ namespace ApprovalService.Infrastructure.Services
                     return false;
                 }
 
-                // Extract the UpdateData 
                 JsonElement updateDataElement =GetUpdateDataElement(root);
 
-                // Build update fields
                 var model = GetStringProperty(updateDataElement, "model", "Model");
                 var vendor = GetStringProperty(updateDataElement, "vendor", "Vendor");
                 var worker = GetStringProperty(updateDataElement, "worker", "Worker");
@@ -220,13 +212,11 @@ namespace ApprovalService.Infrastructure.Services
                 var isActive = GetBoolProperty(updateDataElement, "isActive", "IsActive", true);
                 var isNewItem = GetBoolProperty(updateDataElement, "isNewItem", "IsNewItem", true);
 
-                // Check for image data
                 var imageData = GetImageData(updateDataElement);
                 var imageFileName = GetImageFileName(updateDataElement);
 
                 if (imageData != null && imageFileName != null)
                 {
-                    // Update with image using multipart
                     _logger.LogInformation($"Updating product {productId} with new image");
 
                     using var formContent = new MultipartFormDataContent();
@@ -241,7 +231,6 @@ namespace ApprovalService.Infrastructure.Services
                     formContent.Add(new StringContent(isActive.ToString()), "IsActive");
                     formContent.Add(new StringContent(isNewItem.ToString()), "IsNewItem");
 
-                    // Add image
                     var imageContent = new ByteArrayContent(imageData);
                     imageContent.Headers.ContentType = new MediaTypeHeaderValue(GetMimeType(imageFileName));
                     formContent.Add(imageContent, "ImageFile", imageFileName);
@@ -256,7 +245,6 @@ namespace ApprovalService.Infrastructure.Services
                 }
                 else
                 {
-                    // Update without image using JSON
                     _logger.LogInformation($"Updating product {productId} without image change");
 
                     var updateDto = new
@@ -327,7 +315,6 @@ namespace ApprovalService.Infrastructure.Services
                 var jsonDoc = JsonDocument.Parse(actionData);
                 var root = jsonDoc.RootElement;
 
-                // Extract transfer details
                 var productId = GetIntProperty(root, "productId", "ProductId");
                 var toDepartmentId = GetIntProperty(root, "toDepartmentId", "ToDepartmentId");
                 var toWorker = GetStringProperty(root, "toWorker", "ToWorker");
@@ -348,7 +335,6 @@ namespace ApprovalService.Infrastructure.Services
                 formContent.Add(new StringContent(toWorker), "ToWorker");
                 formContent.Add(new StringContent(notes), "Notes");
 
-                // Check for image data in transfer
                 var imageData = GetImageData(root);
                 var imageFileName = GetImageFileName(root);
 
@@ -389,10 +375,8 @@ namespace ApprovalService.Infrastructure.Services
                     return false;
                 }
 
-                // Extract update data
                 JsonElement updateDataElement = GetUpdateDataElement(root);
 
-                // Build update object
                 var updateDto = new
                 {
                     notes = GetStringProperty(updateDataElement, "notes", "Notes")
@@ -449,17 +433,14 @@ namespace ApprovalService.Infrastructure.Services
         }
 
 
-        // Helper methods
         private JsonElement GetProductElement(JsonElement root)
         {
-            // Try to find product data in various locations
             if (root.TryGetProperty("ProductData", out var productDataProp))
                 return productDataProp;
 
             if (root.TryGetProperty("productData", out var productDataCamel))
                 return productDataCamel;
 
-            // If not nested, return root itself
             return root;
         }
 
@@ -471,7 +452,6 @@ namespace ApprovalService.Infrastructure.Services
             if (root.TryGetProperty("updateData", out var updateDataCamel))
                 return updateDataCamel;
 
-            // If not found, return root (flat structure)
             return root;
         }
 
@@ -479,7 +459,6 @@ namespace ApprovalService.Infrastructure.Services
         {
             string? base64Data = null;
 
-            // Try various property names
             var propertyNames = new[] { "imageData", "ImageData", "image", "Image" };
 
             foreach (var propName in propertyNames)
@@ -497,7 +476,7 @@ namespace ApprovalService.Infrastructure.Services
             {
                 try
                 {
-                    // Handle data URL format if present
+                    // Strip the data URL prefix if the image came as one.
                     if (base64Data.Contains(","))
                     {
                         base64Data = base64Data.Split(',')[1];
@@ -534,7 +513,6 @@ namespace ApprovalService.Infrastructure.Services
 
         private string GetStringProperty(JsonElement element, string camelCase, string pascalCase)
         {
-            // Try camelCase first
             if (element.TryGetProperty(camelCase, out var prop))
             {
                 if (prop.ValueKind == JsonValueKind.String)
@@ -543,7 +521,6 @@ namespace ApprovalService.Infrastructure.Services
                     return prop.ToString();
             }
 
-            // Then try PascalCase
             if (element.TryGetProperty(pascalCase, out var propPascal))
             {
                 if (propPascal.ValueKind == JsonValueKind.String)
@@ -557,13 +534,11 @@ namespace ApprovalService.Infrastructure.Services
 
         private bool GetBoolProperty(JsonElement element, string camelCase, string pascalCase, bool defaultValue)
         {
-            // Try camelCase
             if (element.TryGetProperty(camelCase, out var prop))
             {
                 if (prop.ValueKind == JsonValueKind.True) return true;
                 if (prop.ValueKind == JsonValueKind.False) return false;
 
-                // Handle string representations
                 if (prop.ValueKind == JsonValueKind.String)
                 {
                     var strValue = prop.GetString()?.ToLower();
@@ -572,13 +547,11 @@ namespace ApprovalService.Infrastructure.Services
                 }
             }
 
-            // Try PascalCase
             if (element.TryGetProperty(pascalCase, out var propPascal))
             {
                 if (propPascal.ValueKind == JsonValueKind.True) return true;
                 if (propPascal.ValueKind == JsonValueKind.False) return false;
 
-                // Handle string representations
                 if (propPascal.ValueKind == JsonValueKind.String)
                 {
                     var strValue = propPascal.GetString()?.ToLower();
@@ -592,25 +565,21 @@ namespace ApprovalService.Infrastructure.Services
 
         private int GetIntProperty(JsonElement element, string camelCase, string pascalCase)
         {
-            // Try camelCase
             if (element.TryGetProperty(camelCase, out var prop))
             {
                 if (prop.ValueKind == JsonValueKind.Number)
                     return prop.GetInt32();
 
-                // Handle string representations
                 if (prop.ValueKind == JsonValueKind.String &&
                     int.TryParse(prop.GetString(), out var parsed))
                     return parsed;
             }
 
-            // Try PascalCase
             if (element.TryGetProperty(pascalCase, out var propPascal))
             {
                 if (propPascal.ValueKind == JsonValueKind.Number)
                     return propPascal.GetInt32();
 
-                // Handle string representations
                 if (propPascal.ValueKind == JsonValueKind.String &&
                     int.TryParse(propPascal.GetString(), out var parsed))
                     return parsed;

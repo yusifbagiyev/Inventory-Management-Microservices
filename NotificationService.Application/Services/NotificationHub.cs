@@ -23,15 +23,13 @@ namespace NotificationService.Application.Services
 
             if (!string.IsNullOrEmpty(userId))
             {
-                // Store connection for this user
                 await _connectionManager.AddConnection(userId, Context.ConnectionId);
 
-                // Add to user-specific group - this is crucial for targeted notifications
+                // NotificationSender reaches a user only through this group.
                 var userGroup = $"user-{userId}";
                 await Groups.AddToGroupAsync(Context.ConnectionId, userGroup);
                 _logger.LogInformation($"User {userId} joined group {userGroup}");
 
-                // Add to role groups for role-based notifications
                 var roles = Context.User?.FindAll(ClaimTypes.Role).Select(c => c.Value) ?? Enumerable.Empty<string>();
                 foreach (var role in roles)
                 {
@@ -40,7 +38,6 @@ namespace NotificationService.Application.Services
                     _logger.LogInformation($"User {userId} added to role group: {roleGroup}");
                 }
 
-                // Send connection confirmation with initial data
                 await Clients.Caller.SendAsync("ConnectionEstablished", new
                 {
                     connectionId = Context.ConnectionId,

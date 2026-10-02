@@ -118,17 +118,14 @@ namespace ProductService.Infrastructure.Services
                 return;
             }
 
-            // Update product info
             product.UpdateAfterRouting(transferEvent.ToDepartmentId, transferEvent.ToWorker);
 
-            // Update image if provided
+            // A transfer photo replaces the product's image.
             if (transferEvent.ImageData != null && transferEvent.ImageData.Length > 0)
             {
-                // Delete old image
                 if (!string.IsNullOrEmpty(product.ImageUrl))
                     await imageService.DeleteImageAsync(product.ImageUrl);
 
-                // Upload new image
                 using var stream = new MemoryStream(transferEvent.ImageData);
                 var imageUrl = await imageService.UploadImageAsync(
                     stream,

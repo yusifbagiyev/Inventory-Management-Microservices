@@ -106,13 +106,12 @@ namespace InventoryManagement.Web.Controllers
                 if (department == null)
                     return RedirectToAction("NotFound", "Home", "?statusCode=404");
 
-                // Get products for this department
+                // One oversized page, because the details page lists every product of the department.
                 var products = await _apiService.GetAsync<PagedResultDto<ProductViewModel>>(
                     $"api/products?pageSize=10000&pageNumber=1&departmentId={id}");
 
                 var departmentProducts = products?.Items?? new List<ProductViewModel>();
 
-                // Update the image URLs for display
                 foreach (var product in departmentProducts)
                 {
                     if (!string.IsNullOrEmpty(product.ImageUrl))
@@ -123,7 +122,6 @@ namespace InventoryManagement.Web.Controllers
 
                 ViewBag.Products = departmentProducts.ToList();
 
-                // Update counts
                 department.ProductCount = departmentProducts.Count();
                 department.WorkerCount = departmentProducts
                     .Where(w => !string.IsNullOrEmpty(w.Worker))
@@ -245,18 +243,15 @@ namespace InventoryManagement.Web.Controllers
         {
             try
             {
-                // Get department details
                 var department = await _apiService.GetAsync<DepartmentViewModel>($"api/departments/{id}");
                 if (department == null)
                     return RedirectToAction("NotFound", "Home", "?statusCode=404");
 
-                // Get products for this department
                 var products=await _apiService.GetAsync<PagedResultDto<ProductViewModel>>(
                                     $"api/products?pageSize=10000&pageNumber=1&departmentId={id}");
 
                 var departmentProducts=products?.Items?.ToList() ?? new List<ProductViewModel>();
 
-                // Update the image URLs for display (though we won't include images in Word)
                 foreach(var product in departmentProducts)
                 {
                     if (!string.IsNullOrEmpty(product.ImageUrl))
@@ -265,10 +260,8 @@ namespace InventoryManagement.Web.Controllers
                     }
                 }
 
-                // Generate Word document
                 var fileBytes = _wordExportService.GenerateDepartmentInventoryDocument(department, departmentProducts);
 
-                // Return as downloadable file
                 var fileName = $"{department.Name}_Inventory_{DateTime.Now:yyyyMMdd}.docx";
 
                 return File(fileBytes,

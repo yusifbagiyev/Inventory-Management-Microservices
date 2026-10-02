@@ -43,7 +43,7 @@ namespace RouteService.Application.Features.Routes.Commands
                 await _repository.UpdateAsync(route, cancellationToken);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                // Prepare image data if available
+                // The photo goes as bytes because ProductService can't read this service's files.
                 byte[]? imageData = null;
                 string? imageFileName = null;
                 
@@ -66,7 +66,6 @@ namespace RouteService.Application.Features.Routes.Commands
                     }
                 }
 
-                // Now publish the transfer event to update the product
                 var transferEvent = new ProductTransferredEvent
                 {
                     ProductId = route.ProductSnapshot.ProductId,
@@ -79,7 +78,6 @@ namespace RouteService.Application.Features.Routes.Commands
 
                 await _messagePublisher.PublishAsync(transferEvent, "product.transferred", cancellationToken);
 
-                // Publish route completed event for notifications
                 var completedEvent = new RouteCompletedEvent
                 {
                     RouteId = route.Id,

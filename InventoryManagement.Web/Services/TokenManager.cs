@@ -33,14 +33,12 @@ namespace InventoryManagement.Web.Services
                 return null;
             }
 
-            // Check if user is authenticated
             if (!(context.User?.Identity?.IsAuthenticated ?? false))
             {
                 _logger.LogDebug("User not authenticated, cannot provide token");
                 return null;
             }
 
-            // Check if session has exceeded 30 days (for Remember Me users)
             if (await HasSessionExpiredAsync())
             {
                 _logger.LogInformation("User session exceeded {Days} days, forcing logout", MAX_SESSION_DAYS);
@@ -48,10 +46,9 @@ namespace InventoryManagement.Web.Services
                 return null;
             }
 
-            // Try to get token from session
             var token = context.Session.GetString("JwtToken");
 
-            // If no token in session, try to restore from refresh token
+            // The session can be lost while the auth cookie lives on, so restore the token from the refresh cookie.
             if (string.IsNullOrEmpty(token))
             {
                 _logger.LogInformation("No JWT token in session for authenticated user {User}, attempting restore",
@@ -70,7 +67,6 @@ namespace InventoryManagement.Web.Services
                 }
             }
 
-            // Check if token needs refresh (expiring soon)
             if (!string.IsNullOrEmpty(token) && IsTokenExpiredOrExpiring(token))
             {
                 _logger.LogInformation("JWT token expiring soon, refreshing...");
@@ -89,7 +85,6 @@ namespace InventoryManagement.Web.Services
                 }
             }
 
-            // Update last activity time
             if (!string.IsNullOrEmpty(token))
             {
                 context.Session.SetString("LastActivity", DateTime.Now.ToString("o"));
@@ -100,7 +95,7 @@ namespace InventoryManagement.Web.Services
 
         public async Task<bool> RefreshTokenAsync()
         {
-            // Implement cooldown to prevent rapid refresh attempts
+            // The cooldown and the lock are static, so they apply across all users.
             var timeSinceLastRefresh = DateTime.Now - _lastRefreshAttempt;
             if (timeSinceLastRefresh.TotalSeconds < REFRESH_COOLDOWN_SECONDS)
             {
@@ -109,7 +104,6 @@ namespace InventoryManagement.Web.Services
                 return false;
             }
 
-            // Use semaphore to prevent concurrent refresh attempts
             if (!await _refreshLock.WaitAsync(TimeSpan.FromSeconds(10)))
             {
                 _logger.LogWarning("Could not acquire refresh lock within timeout");
@@ -123,7 +117,6 @@ namespace InventoryManagement.Web.Services
                 var context = _httpContextAccessor.HttpContext;
                 if (context == null) return false;
 
-                // Get refresh token from HttpOnly cookie
                 var refreshToken = context.Request.Cookies["refresh_token"];
 
                 if (string.IsNullOrEmpty(refreshToken))
@@ -132,12 +125,11 @@ namespace InventoryManagement.Web.Services
                     return false;
                 }
 
-                // Get current access token (may be empty if session was lost)
+                // Empty when the session was lost.
                 var currentAccessToken = context.Session.GetString("JwtToken") ?? string.Empty;
 
                 _logger.LogInformation("Calling auth service to refresh JWT token...");
 
-                // Call identity service to refresh tokens
                 var newTokens = await _authService.RefreshTokenAsync(refreshToken, currentAccessToken);
 
                 if (newTokens == null || string.IsNullOrEmpty(newTokens.AccessToken))
@@ -146,11 +138,9 @@ namespace InventoryManagement.Web.Services
                     return false;
                 }
 
-                // Store new access token in session
                 context.Session.SetString("JwtToken", newTokens.AccessToken);
                 context.Session.SetString("LastActivity", DateTime.Now.ToString("o"));
 
-                // Update user data if available
                 if (newTokens.User != null)
                 {
                     context.Session.SetString("UserData", JsonConvert.SerializeObject(new
@@ -163,7 +153,7 @@ namespace InventoryManagement.Web.Services
                     }));
                 }
 
-                // Update refresh token cookie (token rotation for security)
+                // Every refresh issues a new refresh token, so the cookie must be rewritten.
                 var rememberMe = context.Request.Cookies["remember_me"] == "true";
                 var refreshCookieOptions = new CookieOptions
                 {
@@ -202,7 +192,7 @@ namespace InventoryManagement.Web.Services
                 var expiryTime = jwtToken.ValidTo.ToLocalTime();
                 var now = DateTime.Now;
 
-                // Refresh if less than 5 minutes remaining
+                // Refresh early, once less than 5 minutes are left.
                 var bufferTime = TimeSpan.FromMinutes(5);
                 var expiresIn = expiryTime - now;
 
@@ -218,7 +208,7 @@ namespace InventoryManagement.Web.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error parsing JWT token");
-                return true; // Treat parse errors as expired
+                return true; // An unreadable token counts as expired
             }
         }
 
@@ -227,11 +217,10 @@ namespace InventoryManagement.Web.Services
             var context = _httpContextAccessor.HttpContext;
             if (context == null) return false;
 
-            // Only check for Remember Me users
+            // Only remember-me sessions can last long enough to hit the limit.
             var rememberMe = context.Request.Cookies["remember_me"] == "true";
             if (!rememberMe) return false;
 
-            // Get login time from claims
             var loginTimeClaim = context.User.FindFirst("LoginTime");
             if (loginTimeClaim == null) return false;
 
@@ -256,12 +245,11 @@ namespace InventoryManagement.Web.Services
             _logger.LogInformation("Clearing all stored tokens for user {User}",
                 context.User?.Identity?.Name ?? "unknown");
 
-            // Clear session data
             context.Session.Remove("JwtToken");
             context.Session.Remove("UserData");
             context.Session.Remove("LastActivity");
 
-            // Clear refresh token cookie
+            // Delete must use the same options the cookie was written with.
             context.Response.Cookies.Delete("refresh_token", new CookieOptions
             {
                 HttpOnly = true,

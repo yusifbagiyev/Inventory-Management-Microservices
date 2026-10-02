@@ -48,7 +48,7 @@ namespace InventoryManagement.Web.Services
             }
             catch (Exception ex)
             {
-                // Log the error but don't throw
+                // A failed load shows an empty list instead of breaking the page.
                 Console.WriteLine($"Failed to get notifications: {ex.Message}");
                 return new List<NotificationDto>();
             }
@@ -87,7 +87,6 @@ namespace InventoryManagement.Web.Services
         {
             AddAuthorizationHeader();
 
-            // Instead of marking individually, use a bulk endpoint
             var response = await _httpClient.PostAsync("/api/notifications/mark-all-read", null);
             response.EnsureSuccessStatusCode();
         }

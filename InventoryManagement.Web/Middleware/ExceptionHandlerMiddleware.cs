@@ -33,7 +33,6 @@ namespace InventoryManagement.Web.Middleware
         {
             context.Items["ExceptionHandled"] = true;
 
-            // Enhanced structured logging for better Seq integration
             var userId = context.User?.Identity?.Name ?? "Anonymous";
             var requestPath = context.Request.Path.Value ?? "Unknown";
             var requestMethod = context.Request.Method;
@@ -51,7 +50,6 @@ namespace InventoryManagement.Web.Middleware
                 RequestMethod = requestMethod
             };
 
-            // Simplified exception handling with consolidated logging
             switch (exception)
             {
                 case UnauthorizedAccessException:
@@ -122,14 +120,12 @@ namespace InventoryManagement.Web.Middleware
                     break;
             }
 
-            // Include development details only in development environment
             if (_environment.IsDevelopment())
             {
                 errorResponse.Details = exception.StackTrace;
                 errorResponse.InnerException = exception.InnerException?.Message;
             }
 
-            // Handle AJAX requests differently
             if (IsAjaxRequest(context.Request))
             {
                 var jsonResponse = JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions
@@ -140,7 +136,6 @@ namespace InventoryManagement.Web.Middleware
             }
             else
             {
-                // For non-AJAX requests, redirect to error page
                 context.Items["ErrorResponse"] = errorResponse;
                 context.Response.Redirect($"/Home/Error?statusCode={response.StatusCode}");
             }

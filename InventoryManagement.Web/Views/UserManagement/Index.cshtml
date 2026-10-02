@@ -160,7 +160,6 @@
 
 @section Scripts {
     <script>
-        // Search functionality
         document.getElementById('searchInput').addEventListener('keyup', function() {
             const searchTerm = this.value.toLowerCase();
             const tableRows = document.querySelectorAll('#usersTable tbody tr');
@@ -171,7 +170,6 @@
             });
         });
 
-        // Toggle user status
             function toggleUserStatus(userId, isActive) {
             const action = isActive === 'true' ? 'deactivate' : 'activate';
             if (confirm(`Are you sure you want to ${action} this user?`)) {
@@ -197,7 +195,6 @@
             }
         }
 
-        // Delete user
         function deleteUser(userId, username) {
             document.getElementById('deleteUsername').textContent = username;
             document.getElementById('deleteForm').action = '@Url.Action("Delete")/' + userId;
@@ -206,7 +203,6 @@
             modal.show();
         }
 
-        // Auto-hide alerts
         setTimeout(() => {
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {

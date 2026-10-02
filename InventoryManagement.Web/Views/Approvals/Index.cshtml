@@ -186,7 +186,6 @@
                 pageLength: 25
             });
 
-            // Parse and display summaries
             $('.request-summary').each(function() {
                 const $this = $(this);
                 const actionData = $this.data('action-data');
@@ -327,7 +326,6 @@
             $('.loader-overlay').remove();
         }
                 function showToast(message, type = 'info') {
-            // Create a simple toast notification
             const toast = $(`
                 <div class="toast-notification alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} alert-dismissible fade show"
                      style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
@@ -338,7 +336,6 @@
 
             $('body').append(toast);
 
-            // Auto-remove after 5 seconds
             setTimeout(() => {
                 toast.alert('close');
             }, 5000);

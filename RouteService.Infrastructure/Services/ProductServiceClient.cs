@@ -34,7 +34,7 @@ namespace RouteService.Infrastructure.Services
             {
                 Subject = new ClaimsIdentity([
                     new Claim(ClaimTypes.Role, "Admin"),
-                    new Claim(ClaimTypes.NameIdentifier, "0"), // System user
+                    new Claim(ClaimTypes.NameIdentifier, "0"),
                     new Claim(ClaimTypes.Name, "System")
                 ]),
                 Expires = DateTime.Now.AddMinutes(5),

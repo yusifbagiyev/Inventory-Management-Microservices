@@ -1,12 +1,10 @@
-﻿// Global site functionality
-document.addEventListener('DOMContentLoaded', function () {
-    // Initialize tooltips
+﻿document.addEventListener('DOMContentLoaded', function () {
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // Auto-hide alerts after 5 seconds
+    // Alerts close after 5 seconds unless marked alert-permanent.
     setTimeout(function () {
         const alerts = document.querySelectorAll('.alert:not(.alert-permanent):not(#productInfo):not(#errorInfo)');
         alerts.forEach(function (alert) {
@@ -15,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }, 5000);
 
-    // Add loading spinner for forms
+    // Add the no-spinner class to opt a form out.
     const forms = document.querySelectorAll('form:not(.no-spinner)');
     forms.forEach(function (form) {
         form.addEventListener('submit', function () {
@@ -27,11 +25,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Start session monitoring (only if user is authenticated)
     setupSessionMonitor();
 });
 
-// AJAX helper functions
 function showSpinner() {
     const spinner = document.createElement('div');
     spinner.className = 'spinner-overlay';
@@ -46,7 +42,6 @@ function hideSpinner() {
     }
 }
 
-// Image preview for file inputs
 function previewImage(input, previewId) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
@@ -58,20 +53,17 @@ function previewImage(input, previewId) {
     }
 }
 
-// Toast notification
 function showToast(message, type = 'info', duration = 5000) {
-    // Ensure we have a valid type
     const validTypes = ['success', 'error', 'danger', 'warning', 'info', 'secondary'];
     if (!validTypes.includes(type)) {
         type = 'info';
     }
 
-    // Map error to danger for Bootstrap compatibility
+    // Bootstrap has no "error" colour, callers mean danger.
     if (type === 'error') {
         type = 'danger';
     }
 
-    // Create toast HTML with proper styling
     const toastId = 'toast-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 
     const icon = getToastIcon(type);
@@ -88,7 +80,6 @@ function showToast(message, type = 'info', duration = 5000) {
         </div>
     `;
 
-    // Ensure toast container exists
     let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
@@ -98,10 +89,8 @@ function showToast(message, type = 'info', duration = 5000) {
         document.body.appendChild(container);
     }
 
-    // Add toast to container
     container.insertAdjacentHTML('beforeend', toastHtml);
 
-    // Initialize and show the toast
     const toastElement = document.getElementById(toastId);
     const toast = new bootstrap.Toast(toastElement, {
         delay: duration,
@@ -109,14 +98,12 @@ function showToast(message, type = 'info', duration = 5000) {
     });
     toast.show();
 
-    // Remove element after it's hidden
     toastElement.addEventListener('hidden.bs.toast', function () {
         toastElement.remove();
     });
 }
 
 
-// Helper function to get toast icon
 function getToastIcon(type) {
     const icons = {
         'success': 'check-circle',
@@ -129,7 +116,7 @@ function getToastIcon(type) {
 }
 
 
-// Helper function to escape HTML
+// Wrap any API or user text with this before putting it into HTML.
 function escapeHtml(unsafe) {
     return unsafe.replace(/&/g, "&amp;")
                  .replace(/</g, "&lt;")
@@ -139,25 +126,21 @@ function escapeHtml(unsafe) {
 }
 
 
-// Global function to reset form state
+// Undoes the submit spinner, for forms whose submit was cancelled or failed.
 function resetFormState(fromElement){
-    // Find all submit buttons in the form
     const submitButtons = fromElement.querySelectorAll('button[type="submit"]');
 
     submitButtons.forEach(button => {
-        // Reset button state
         button.disabled = false;
 
-        // Restore original text (store it first if not already)
         if (button.dataset.originalText) {
             button.innerHTML = button.dataset.originalText;
         } else {
-            // Remove spinner if present
+            // Without a saved label the best guess is a plain Submit.
             const spinner = button.querySelector('.spinner-border');
             if (spinner) {
                 spinner.remove();
             }
-            // Remove "Processing..." text
             button.innerHTML = button.innerHTML.replace('Processing...', 'Submit');
         }
     });

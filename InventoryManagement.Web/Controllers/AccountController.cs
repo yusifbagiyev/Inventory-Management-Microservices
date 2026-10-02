@@ -32,14 +32,13 @@ namespace InventoryManagement.Web.Controllers
         {
             if (User.Identity?.IsAuthenticated ?? false)
             {
-                // Check if we have a valid token
                 var validToken = await _tokenManager.GetValidTokenAsync();
                 if (!string.IsNullOrEmpty(validToken))
                 {
                     return RedirectToAction("Index", "Home");
                 }
 
-                // If token is invalid, clean up and show login
+                // The cookie outlived the JWT, so sign out fully before showing the form.
                 await CleanupAuthenticationAsync();
             }
 
@@ -62,10 +61,9 @@ namespace InventoryManagement.Web.Controllers
                     var result = await _authService.LoginAsync(model.Username, model.Password, model.RememberMe);
                     if (result != null && !string.IsNullOrEmpty(result.AccessToken))
                     {
-                        // SECURITY: Only store access token in session (server-side memory)
+                        // The access token stays in the server-side session and never reaches the browser.
                         HttpContext.Session.SetString("JwtToken", result.AccessToken);
 
-                        // Store minimal user info in session
                         HttpContext.Session.SetString("UserData", JsonConvert.SerializeObject(new
                         {
                             result.User.Id,
@@ -75,10 +73,9 @@ namespace InventoryManagement.Web.Controllers
                             result.User.LastName
                         }));
 
-                        // Get the actual RememberMe value (use our parameter if result doesn't have it)
                         var rememberMe = result.RememberMe ?? model.RememberMe;
 
-                        // SECURITY: Store refresh token in HttpOnly cookie
+                        // HttpOnly so page scripts can't read the refresh token.
                         var refreshCookieOptions = new CookieOptions
                         {
                             HttpOnly = true,
@@ -92,7 +89,6 @@ namespace InventoryManagement.Web.Controllers
                         };
                         Response.Cookies.Append("refresh_token", result.RefreshToken, refreshCookieOptions);
 
-                        // Store Remember Me preference
                         if (rememberMe)
                         {
                             var rememberCookieOptions = new CookieOptions
@@ -108,15 +104,12 @@ namespace InventoryManagement.Web.Controllers
                         }
                         else
                         {
-                            // Clear remember me cookies if user didn't check the box
                             Response.Cookies.Delete("remember_me");
                             Response.Cookies.Delete("username");
                         }
 
-                        // Store last activity time
                         HttpContext.Session.SetString("LastActivity", DateTime.Now.ToString("o"));
 
-                        // Create authentication claims
                         var claims = new List<Claim>
                         {
                             new Claim(ClaimTypes.NameIdentifier, result.User.Id.ToString()),
@@ -210,7 +203,6 @@ namespace InventoryManagement.Web.Controllers
 
             try
             {
-                // Get user ID from claims
                 var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
 
                 if (userId == 0)
@@ -218,7 +210,6 @@ namespace InventoryManagement.Web.Controllers
                     return RedirectToAction("Login");
                 }
 
-                // Get complete user data from API
                 var viewModel = await _userManagementService.GetUserProfileAsync(userId);
 
                 if (viewModel == null)
@@ -239,7 +230,6 @@ namespace InventoryManagement.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> RefreshToken()
         {
-            // Get refresh token from HttpOnly cookie
             var refreshToken = Request.Cookies["refresh_token"];
             var accessToken = HttpContext.Session.GetString("jwt_token");
 
@@ -258,7 +248,6 @@ namespace InventoryManagement.Web.Controllers
 
                 if (result != null)
                 {
-                    // Update session with new access token
                     HttpContext.Session.SetString("JwtToken", result.AccessToken);
                     HttpContext.Session.SetString("UserData", JsonConvert.SerializeObject(new
                     {
@@ -270,7 +259,7 @@ namespace InventoryManagement.Web.Controllers
                     }));
                     HttpContext.Session.SetString("LastActivity", DateTime.Now.ToString("o"));
 
-                    // Update refresh token cookie with new token (token rotation)
+                    // The API rotates refresh tokens, so the old one is already dead.
                     var rememberMe = Request.Cookies["remember_me"] == "true";
                     var refreshCookieOptions = new CookieOptions
                     {
@@ -368,13 +357,10 @@ namespace InventoryManagement.Web.Controllers
 
         private async Task CleanupAuthenticationAsync()
         {
-            // Sign out from cookie authentication
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
-            // Clear session
             HttpContext.Session.Clear();
 
-            // Clear the refresh token cookie (but keep remember_me and username if they exist)
             Response.Cookies.Delete("refresh_token", new CookieOptions
             {
                 HttpOnly = true,
@@ -397,7 +383,7 @@ namespace InventoryManagement.Web.Controllers
         {
             if (IsAjaxRequest())
             {
-                Response.StatusCode = 400; // Important: Set error status code
+                Response.StatusCode = 400;
 
                 var errors = ModelState
                     .Where(x => x.Value?.Errors.Count > 0)

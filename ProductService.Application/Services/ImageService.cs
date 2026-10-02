@@ -19,8 +19,7 @@ namespace ProductService.Application.Services
             if (!IsValidImage(fileName))
                 throw new ArgumentException("Invalid image format");
 
-            // Add size validation
-            if (imageStream.Length > 5 * 1024 * 1024) // 5MB
+            if (imageStream.Length > 5 * 1024 * 1024)
                 throw new ArgumentException("Image size exceeds 5MB limit");
 
             var inventoryFolder=Path.Combine(_imagePath,inventoryCode.ToString());
@@ -58,7 +57,7 @@ namespace ProductService.Application.Services
             var folderPath = Path.Combine(_imagePath, inventoryCode.ToString());
 
             if (Directory.Exists(folderPath))
-                Directory.Delete(folderPath, true); // true = recursive delete
+                Directory.Delete(folderPath, true);
 
             return Task.CompletedTask;
         }

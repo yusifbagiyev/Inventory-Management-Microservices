@@ -5,13 +5,10 @@ using NotificationService.Application.Interfaces;
 
 namespace NotificationService.API.Controllers
 {
-    /// <summary>
-    /// Test controller for WhatsApp integration
-    /// Remove this controller in production
-    /// </summary>
+    /// <summary>Manual checks of the WhatsApp setup. Not meant for production.</summary>
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")] // Only admins can test
+    [Authorize(Roles = "Admin")]
     public class WhatsAppTestController : ControllerBase
     {
         private readonly IWhatsAppService _whatsAppService;
@@ -28,9 +25,6 @@ namespace NotificationService.API.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Test sending a message to WhatsApp group
-        /// </summary>
         [HttpPost("test-group")]
         public async Task<IActionResult> TestGroupMessage([FromBody] TestMessageDto dto)
         {
@@ -60,9 +54,6 @@ namespace NotificationService.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Test sending a product notification to WhatsApp
-        /// </summary>
         [HttpPost("test-product-notification")]
         public async Task<IActionResult> TestProductNotification()
         {
@@ -74,7 +65,6 @@ namespace NotificationService.API.Controllers
                     return BadRequest(new { error = "WhatsApp group ID not configured" });
                 }
 
-                // Create a test product notification
                 var testNotification = new WhatsAppProductNotification
                 {
                     ProductId = 999,
@@ -112,9 +102,6 @@ namespace NotificationService.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Get WhatsApp configuration status
-        /// </summary>
         [HttpGet("status")]
         public IActionResult GetWhatsAppStatus()
         {

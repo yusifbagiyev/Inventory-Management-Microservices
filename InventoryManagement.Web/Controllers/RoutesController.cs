@@ -48,7 +48,7 @@ namespace InventoryManagement.Web.Controllers
                 if (endDate.HasValue)
                     queryString.Append($"&endDate={endDate.Value:yyyy-MM-dd}");
 
-                // Add ordering to show pending first
+                // Pending transfers first.
                 queryString.Append("&orderBy=IsCompleted&ascending=true");
 
                 var routes = await _apiService.GetAsync<PagedResultDto<RouteViewModel>>(
@@ -64,7 +64,6 @@ namespace InventoryManagement.Web.Controllers
                         }
                     }
 
-                    // Calculate actual displayed range
                     var start = ((routes.PageNumber - 1) * routes.PageSize) + 1;
                     var end = Math.Min(routes.PageNumber * routes.PageSize, routes.TotalCount);
                     ViewBag.ShowingStart = start;
@@ -174,7 +173,6 @@ namespace InventoryManagement.Web.Controllers
             }
             try
             {
-                // Get product details first to include in approval request
                 var product = await _apiService.GetAsync<ProductDto>($"api/products/{model.ProductId}");
                 var departments = await _apiService.GetAsync<List<DepartmentDto>>("api/departments");
 
@@ -196,7 +194,6 @@ namespace InventoryManagement.Web.Controllers
                     ["notes"] = model.Notes ?? ""
                 };
 
-                //Add image data if present
                 if (HttpContext.Request.Form.Files.Count > 0)
                 {
                     var imageFile = HttpContext.Request.Form.Files[0];
@@ -306,7 +303,7 @@ namespace InventoryManagement.Web.Controllers
             {
                 _logger?.LogError(ex, "Error completing route");
                 TempData["Error"] = "An error occurred while completing the route";
-                return RedirectToAction(nameof(Index));  // Add this return
+                return RedirectToAction(nameof(Index));
             }
         }
 

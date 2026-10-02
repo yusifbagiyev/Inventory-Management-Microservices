@@ -189,71 +189,58 @@
             let currentProductData = null;
             let searchTimeout = null;
             let lastSearchedCode = '';
-            let isSubmitting = false; // Track submission state
+            let isSubmitting = false;
 
-            // Focus on inventory code input
             $('#inventoryCodeInput').focus();
 
-            // Get the submit button reference
             const $submitBtn = $('#submitBtn');
             const originalButtonHtml = $submitBtn.html();
 
-            // Initialize AjaxHandler for the form
             AjaxHandler.handleForm('#transferForm', {
                 validateBeforeSubmit: true,
                 successMessage: 'Product transferred successfully!',
                 successRedirect: '/Routes',
                 redirectDelay: 1500,
                 onBeforeSubmit: function(form) {
-                    // FIRST: Check if we're already submitting (this prevents duplicates)
                     if (isSubmitting) {
                         console.log('Already submitting, blocking duplicate submission');
-                        return false; // Stop here, don't proceed with submission
+                        return false;
                     }
 
-                    // SECOND: Mark as submitting immediately
                     isSubmitting = true;
 
-                    // THIRD: Now do validation (if validation fails, we'll reset the flag)
+                    // The flag is set before these checks, so each failed check must clear it again.
 
-                    // Validate that we have a product selected
                     if (!currentProductData || !$('#ProductId').val()) {
                         showError('Please search for and select a valid product first');
                         $('#inventoryCodeInput').focus();
 
-                        // Reset submission state so user can try again
                         isSubmitting = false;
                         return false;
                     }
 
-                    // Validate department selection
                     if (!$('#ToDepartmentId').val()) {
                         showError('Please select a destination department');
                         $('#ToDepartmentId').focus();
 
-                        // Reset submission state so user can try again
                         isSubmitting = false;
                         return false;
                     }
 
-                    // All validation passed, proceed with submission
                     console.log('Validation passed, proceeding with transfer submission');
                     return true;
                 },
                 onSuccess: function(response) {
-                    // Handle approval request response
                     if (response.isApprovalRequest || response.approvalRequestId) {
                         showToast(response.message || 'Transfer request submitted for approval', 'info');
                         setTimeout(() => window.location.href = '/Routes', 2000);
-                        return false; // Prevent default success handling
+                        return false; // Skip AjaxHandler's own redirect
                     }
-                    return true; // Continue with default success handling
+                    return true;
                 },
                 onError: function(errorMessage, xhr) {
-                    // IMPORTANT: Reset submission state on error so user can retry
                     isSubmitting = false;
 
-                    // Also restore button state
                     $submitBtn.prop('disabled', false).html(originalButtonHtml);
 
                     showError(errorMessage);
@@ -261,7 +248,6 @@
                 }
             });
 
-            // Handle Enter key in inventory code input
             $('#inventoryCodeInput').on('keypress', function(e) {
                 if (e.which === 13) {
                     e.preventDefault();
@@ -269,7 +255,6 @@
                 }
             });
 
-            // Auto-search on input with debouncing
             $('#inventoryCodeInput').on('input', function() {
                 const inventoryCode = $(this).val().trim();
 
@@ -293,12 +278,10 @@
                 }, 750);
             });
 
-            // Search button click
             $('#searchBtn').on('click', function() {
                 searchProduct();
             });
 
-            // Image preview
             $('#ImageFile').on('change', function() {
                 if (this.files && this.files[0]) {
                     const reader = new FileReader();
@@ -312,7 +295,6 @@
                 }
             });
 
-            // Department change handler
             $('#ToDepartmentId').on('change', function() {
                 if (currentProductData && $(this).val() === currentProductData.departmentId?.toString()) {
                     showWarning('You are transferring to the same department the product is currently in.');
@@ -321,7 +303,6 @@
                 }
             });
 
-            // Search product function
             async function searchProduct() {
                 const inventoryCode = $('#inventoryCodeInput').val().trim();
 
@@ -378,7 +359,6 @@
                 }
             }
 
-            // Display product information
             function displayProductInfo(product) {
                 $('#productModel').text(product.model || 'N/A');
                 $('#productVendor').text(product.vendor || 'N/A');
@@ -395,7 +375,7 @@
                 showSuccess(`Product found: ${product.model} - Currently with ${product.worker || 'no worker'}`);
             }
 
-            // Check for pending routes
+            // A product with an open transfer cannot be moved again until that one is completed.
             async function checkPendingRoutes(productId) {
                 try {
                     const apiUrl = AppConfig.buildApiUrl(`inventoryroutes/product/${productId}`);
@@ -426,7 +406,6 @@
                 }
             }
 
-            // Load recent transfers
             async function loadRecentTransfers() {
                 try {
                     const apiUrl = AppConfig.buildApiUrl('inventoryroutes?pageSize=5&pageNumber=1');
@@ -471,7 +450,6 @@
                 }
             }
 
-            // UI Helper Functions
             function showTransferFields() {
                 $('#transferFields').slideDown();
                 $submitBtn.prop('disabled', false);
@@ -535,7 +513,7 @@
                 hideWarning();
                 currentProductData = null;
                 lastSearchedCode = '';
-                isSubmitting = false; // Reset submission flag when resetting form
+                isSubmitting = false;
                 $('#ProductId').val('');
                 $('#ToDepartmentId').val('');
                 $('#ToWorker').val('');
@@ -543,10 +521,8 @@
                 $('#imagePreviewContainer').hide();
             }
 
-            // Load recent transfers on page load
             loadRecentTransfers();
 
-            // Refresh recent transfers every 30 seconds
             setInterval(loadRecentTransfers, 30000);
         });
     </script>

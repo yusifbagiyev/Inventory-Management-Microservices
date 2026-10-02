@@ -61,13 +61,11 @@ namespace ProductService.Application.Features.Products.Commands
                 return await _transactionService.ExecuteAsync(
                 async () =>
                 {
-                    //upload image if provided
                     if (dto.ImageFile != null && dto.ImageFile.Length > 0)
                     {
                         using var stream = dto.ImageFile.OpenReadStream();
                         imageUrl = await _imageService.UploadImageAsync(stream, dto.ImageFile.FileName, dto.InventoryCode);
                     }
-                    //create new product
                     var newProduct = new Product(
                         dto.InventoryCode,
                         dto.Model,
@@ -105,7 +103,7 @@ namespace ProductService.Application.Features.Products.Commands
                         ImageFileName= null
                     };
 
-                    // Add image data if available
+                    // Consumers get the bytes so they don't have to fetch the file from this service.
                     if(dto.ImageFile != null && dto.ImageFile.Length > 0)
                     {
                         using var ms= new MemoryStream();
@@ -120,7 +118,7 @@ namespace ProductService.Application.Features.Products.Commands
                 },
                 async () =>
                 {
-                    //delete image if an error occurs
+                    // Don't leave an orphaned file behind when the insert fails.
                     if (!string.IsNullOrEmpty(imageUrl))
                     {
                         await _imageService.DeleteImageAsync(imageUrl);

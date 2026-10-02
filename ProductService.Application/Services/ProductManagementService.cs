@@ -43,23 +43,19 @@ namespace ProductService.Application.Services
             string userName,
             List<string> userPermissions)
         {
-            // First, we validate that the product doesn't already exist
             await ValidateProductDoesNotExist(dto.InventoryCode);
 
-            // Check if user has direct permission to bypass approval
             if (userPermissions.Contains(AllPermissions.ProductCreateDirect))
             {
                 _logger.LogInformation($"User {userName} creating product {dto.InventoryCode} directly");
                 return await _mediator.Send(new CreateProduct.Command(dto));
             }
 
-            // Check if user has permission to create with approval
             if (!userPermissions.Contains(AllPermissions.ProductCreate))
             {
                 throw new InsufficientPermissionsException("You don't have permission to create products");
             }
 
-            // Build the approval request with enriched data
             var actionData = await BuildCreateProductActionData(dto);
             var approvalRequest = new CreateApprovalRequestDto
             {
@@ -87,20 +83,16 @@ namespace ProductService.Application.Services
             string userName,
             List<string> userPermissions)
         {
-            // First, get the existing product to compare changes
             var existingProduct = await GetProductById(id);
 
-            // Build comprehensive change tracking
             var changeComparison = await TrackWhatChanges(existingProduct, dto);
 
-            // Only proceed if there are actual changes
             if (!changeComparison.Any())
             {
                 _logger.LogInformation($"No changes detected for product {id}");
                 return existingProduct;
             }
 
-            // Check if user has direct update permission
             if (userPermissions.Contains(AllPermissions.ProductUpdateDirect))
             {
                 _logger.LogInformation($"User {userName} updating product {id} directly");
@@ -109,13 +101,11 @@ namespace ProductService.Application.Services
             }
 
 
-            // Check if user has permission to update with approval
             if (!userPermissions.Contains(AllPermissions.ProductUpdate))
             {
                 throw new InsufficientPermissionsException("You don't have permission to update products");
             }
 
-            // Create the update data and approval request
             var updateData = await BuildUpdateProductActionData(dto);
             var approvalRequest = new CreateApprovalRequestDto
             {
@@ -145,10 +135,8 @@ namespace ProductService.Application.Services
             string userName,
             List<string> userPermissions)
         {
-            // Get product information for the approval request
             var product = await GetProductById(id);
 
-            // Check if user has direct delete permission
             if (userPermissions.Contains(AllPermissions.ProductDeleteDirect))
             {
                 _logger.LogInformation($"User {userName} deleting product {id} directly");
@@ -156,13 +144,12 @@ namespace ProductService.Application.Services
                 return;
             }
 
-            // Check if user has permission to delete with approval
             if (!userPermissions.Contains(AllPermissions.ProductDelete))
             {
                 throw new InsufficientPermissionsException("You don't have permission to delete products");
             }
 
-            // Create approval request with product details for audit trail
+            // Product details are stored so the request still reads well after the product is gone.
             var approvalRequest = new CreateApprovalRequestDto
             {
                 RequestType = RequestType.DeleteProduct,
@@ -199,7 +186,6 @@ namespace ProductService.Application.Services
         {
             var existingProduct = await _mediator.Send(new GetProductByInventoryCodeQuery(inventoryCode));
 
-            // Double-check with a small delay to avoid race conditions
             if (existingProduct != null)
             {
                 _logger.LogWarning($"Attempt to create duplicate product with inventory code {inventoryCode}");
@@ -225,7 +211,7 @@ namespace ProductService.Application.Services
                 ["departmentId"] = dto.DepartmentId
             };
 
-            // Enrich with category and department names for better approval context
+            // The names are only for the approver to read. Execution uses the ids.
             try
             {
                 var category = await _mediator.Send(new GetCategoryByIdQuery(dto.CategoryId));
@@ -239,7 +225,6 @@ namespace ProductService.Application.Services
                 _logger.LogWarning(ex, "Failed to enrich product data with names");
             }
 
-            // Handle image data if present
             if (dto.ImageFile != null && dto.ImageFile.Length > 0)
             {
                 using var ms = new MemoryStream();
@@ -269,7 +254,6 @@ namespace ProductService.Application.Services
                 ["isNewItem"] = dto.IsNewItem,
             };
 
-            // Add image data if present
             if (dto.ImageFile != null && dto.ImageFile.Length > 0)
             {
                 using var ms = new MemoryStream();
@@ -279,7 +263,6 @@ namespace ProductService.Application.Services
                 updateData["imageSize"] = dto.ImageFile.Length;
             }
 
-            // If you want to remove image , send ImageFile as null
             else
             {
                 updateData["imageUrl"] = string.Empty;

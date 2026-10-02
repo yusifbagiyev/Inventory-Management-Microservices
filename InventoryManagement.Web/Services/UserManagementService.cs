@@ -188,7 +188,6 @@ namespace InventoryManagement.Web.Services
         {
             try
             {
-                // First, update the basic user information
                 var updateDto = new
                 {
                     model.Id,
@@ -210,13 +209,12 @@ namespace InventoryManagement.Web.Services
                     return false;
                 }
 
-                // Now handle role updates with better error tracking
                 var roleUpdateSuccess = await UpdateUserRolesAsync(model.Id, model.CurrentRoles, model.SelectedRoles ?? new List<string>());
 
+                // The user details are saved by now, so a failed role change is only logged.
                 if (!roleUpdateSuccess)
                 {
                     _logger.LogWarning("User info updated but role update failed for user {UserId}", model.Id);
-                    // You might want to return false here or handle it differently
                 }
 
                 return true;
@@ -232,16 +230,13 @@ namespace InventoryManagement.Web.Services
         {
             try
             {
-                // Find roles to remove (in current but not in selected)
                 var rolesToRemove = currentRoles.Except(selectedRoles).ToList();
 
-                // Find roles to add (in selected but not in current)
                 var rolesToAdd = selectedRoles.Except(currentRoles).ToList();
 
                 _logger.LogInformation("User {UserId}: Removing roles: {RolesToRemove}, Adding roles: {RolesToAdd}",
                     userId, string.Join(", ", rolesToRemove), string.Join(", ", rolesToAdd));
 
-                // Remove roles that are no longer selected
                 foreach (var role in rolesToRemove)
                 {
                     var removeResponse = await _httpClient.PostAsync($"api/auth/users/{userId}/remove-role",
@@ -255,7 +250,6 @@ namespace InventoryManagement.Web.Services
                     }
                 }
 
-                // Add newly selected roles
                 foreach (var role in rolesToAdd)
                 {
                     var addResponse = await _httpClient.PostAsync($"api/auth/users/{userId}/assign-role",
@@ -346,10 +340,9 @@ namespace InventoryManagement.Web.Services
         }
 
 
-        // Helper methods for permission formatting
         private string FormatPermissionName(string permission)
         {
-            // Convert "Product.View" to "View Products"
+            // Product.View becomes View Products.
             var parts = permission.Split('.');
             if (parts.Length == 2)
             {
@@ -370,7 +363,7 @@ namespace InventoryManagement.Web.Services
 
         private string GetPermissionDescription(string permission)
         {
-            // You can expand this with actual descriptions
+            // Permissions missing here get an empty description.
             var descriptions = new Dictionary<string, string>
             {
                 ["Product.View"] = "View product information",
@@ -379,7 +372,6 @@ namespace InventoryManagement.Web.Services
                 ["Product.Delete"] = "Delete products",
                 ["Route.View"] = "View transfer routes",
                 ["Route.Create"] = "Create transfer routes",
-                // Add more as needed
             };
 
             return descriptions.ContainsKey(permission) ? descriptions[permission] : "";

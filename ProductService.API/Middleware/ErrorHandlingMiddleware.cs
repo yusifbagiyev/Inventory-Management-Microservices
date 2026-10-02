@@ -65,7 +65,6 @@ namespace ProductService.API.Middleware
                     response.Error = "An error occurred while processing your request";
                     response.Details = exception.Message;
 
-                    //Log the full exception
                     var logger=context.RequestServices.GetService<ILogger<ErrorHandlingMiddleware>>();
                     logger?.LogError(exception, "Unhandled exception occurred");
                     break;

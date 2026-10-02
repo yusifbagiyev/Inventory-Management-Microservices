@@ -30,11 +30,9 @@ namespace RouteService.Application.Features.Routes.Commands
                 var route = await _repository.GetByIdAsync(request.Id, cancellationToken)
                     ?? throw new RouteException($"Route with ID {request.Id} not found");
 
-                // Business rule: Cannot delete completed routes
                 if (route.IsCompleted)
                     throw new RouteException("Cannot delete completed route. Completed routes are part of the audit trail.");
 
-                // Delete associated image if exists
                 if (!string.IsNullOrEmpty(route.ImageUrl))
                 {
                     await _imageService.DeleteImageAsync(route.ImageUrl);

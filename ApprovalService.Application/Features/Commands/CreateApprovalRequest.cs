@@ -48,7 +48,6 @@ namespace ApprovalService.Application.Features.Commands
                 await _repository.AddAsync(approvalRequest, cancellationToken);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                //Publish event for notification
                 var evt = new ApprovalRequestCreatedEvent
                 {
                     RequestId = approvalRequest.Id,

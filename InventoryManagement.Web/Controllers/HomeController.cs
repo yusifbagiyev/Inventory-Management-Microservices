@@ -37,14 +37,12 @@ namespace InventoryManagement.Web.Controllers
 
             try
             {
-                // Add validation for period parameter
                 var validPeriods = new[] { "last7days", "last30days", "last6months", "all" };
                 if (!validPeriods.Contains(period.ToLower()))
                 {
                     period = "last7days";
                 }
 
-                // Calculate date range with proper period handling
                 var now = DateTime.Now;
                 DateTime startDate;
                 DateTime endDate = now.Date.AddDays(1).AddSeconds(-1); // End of today
@@ -68,7 +66,7 @@ namespace InventoryManagement.Web.Controllers
                         period = "last7days";
                         break;
                 }
-                // Fetch all data in parallel for better performance
+                // The figures are computed here from complete lists, hence the huge page sizes.
                 var allProductsTask = _apiService.GetAsync<PagedResultDto<ProductViewModel>>(
                     "api/products?pageSize=10000&pageNumber=1");
 
@@ -87,21 +85,18 @@ namespace InventoryManagement.Web.Controllers
                 var departments = await departmentsTask;
                 var categoriesResult = await categoriesTask;
 
-                // Filter routes by period first - this is our primary data source
+                // Most figures count transfers made in the period, not products created in it.
                 var routesInPeriod = FilterRoutesByPeriod(allRoutes, startDate, endDate);
 
-                // Process all metrics based on routes in the period
                 ProcessProductMetrics(model, allProducts, startDate, endDate, period);
                 ProcessRouteMetrics(model, routesInPeriod, period);
                 ProcessDepartmentStats(model, routesInPeriod, departments, allProducts);
                 ProcessCategoryDistribution(model, routesInPeriod, allProducts, categoriesResult);
                 ProcessTransferActivity(model, routesInPeriod, startDate, endDate, period);
 
-                // Calculate active categories and departments based on transfer activity
                 var activeCategoriesInPeriod = CalculateActiveCategoriesCount(routesInPeriod, allProducts);
                 var activeDepartmentsInPeriod = CalculateActiveDepartmentsCount(routesInPeriod);
 
-                // Set ViewBag data
                 ViewBag.CurrentPeriod = period;
                 ViewBag.PeriodStartDate = startDate;
                 ViewBag.PeriodEndDate = endDate;
@@ -121,10 +116,7 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Filter routes by the selected date period
-        /// This is the foundation for all period-based metrics
-        /// </summary>
+        /// <summary>Keeps only the transfers created inside the period.</summary>
         private List<RouteViewModel> FilterRoutesByPeriod(
             PagedResultDto<RouteViewModel>? allRoutes,
             DateTime startDate,
@@ -133,8 +125,7 @@ namespace InventoryManagement.Web.Controllers
             if (allRoutes?.Items == null)
                 return new List<RouteViewModel>();
 
-            // Filter for Transfer routes within the date range
-            // Using .Date property ensures we compare only the date part, ignoring time/microseconds
+            // Compare dates only, so a transfer made late on the last day still counts.
             return allRoutes.Items
                 .Where(r => (r.RouteTypeName == "Transfer" || r.RouteType == "Transfer") &&
                            r.CreatedAt.Date >= startDate.Date &&
@@ -144,10 +135,7 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Calculate how many unique categories were involved in transfers during the period
-        /// A category is "active" if at least one product from that category was transferred
-        /// </summary>
+        /// <summary>A category is active when at least one of its products was transferred in the period.</summary>
         private int CalculateActiveCategoriesCount(
             List<RouteViewModel> routesInPeriod,
             PagedResultDto<ProductViewModel>? allProducts)
@@ -157,7 +145,6 @@ namespace InventoryManagement.Web.Controllers
 
             var products = allProducts.Items.ToList();
 
-            // Get unique category IDs from products that were transferred
             var activeCategoryIds = routesInPeriod
                 .Select(r => r.ProductId)
                 .Distinct()
@@ -171,16 +158,12 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Calculate how many unique departments were involved in transfers during the period
-        /// A department is "active" if it sent or received at least one transfer
-        /// </summary>
+        /// <summary>A department is active when it sent or received a transfer in the period.</summary>
         private int CalculateActiveDepartmentsCount(List<RouteViewModel> routesInPeriod)
         {
             if (!routesInPeriod.Any())
                 return 0;
 
-            // Collect all department IDs that appear as either source or destination
             var activeDepartmentIds = new HashSet<int>();
 
             foreach (var route in routesInPeriod)
@@ -196,10 +179,7 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Process product metrics for the selected period
-        /// Shows new products added during the period
-        /// </summary>
+        /// <summary>Counts products added in the period, or the whole inventory for all time.</summary>
         private void ProcessProductMetrics(
             DashboardViewModel model,
             PagedResultDto<ProductViewModel>? allProducts,
@@ -218,13 +198,11 @@ namespace InventoryManagement.Web.Controllers
 
             if (period.ToLower() == "all")
             {
-                // For "all time", show total inventory
                 model.TotalProducts = products.Count;
                 model.ActiveProducts = products.Count(p => p.IsActive);
             }
             else
             {
-                // For specific periods, show NEW products added during this time
                 var newProducts = products.Where(p =>
                     p.CreatedAt.HasValue &&
                     p.CreatedAt.Value.Date >= startDate.Date &&
@@ -233,7 +211,6 @@ namespace InventoryManagement.Web.Controllers
                 model.TotalProducts = newProducts.Count;
                 model.ActiveProducts = newProducts.Count(p => p.IsActive);
 
-                // Store total inventory for reference
                 ViewBag.TotalInventoryCount = products.Count;
                 ViewBag.ActiveInventoryCount = products.Count(p => p.IsActive);
             }
@@ -241,9 +218,6 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Process route metrics based on filtered routes
-        /// </summary>
         private void ProcessRouteMetrics(
             DashboardViewModel model,
             List<RouteViewModel> routesInPeriod,
@@ -256,10 +230,7 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Process department statistics based on transfer activity
-        /// Shows which departments were most active during the period
-        /// </summary>
+        /// <summary>The five departments with the most transfers in the period.</summary>
         private void ProcessDepartmentStats(
             DashboardViewModel model,
             List<RouteViewModel> routesInPeriod,
@@ -277,17 +248,15 @@ namespace InventoryManagement.Web.Controllers
 
             model.DepartmentStats = activeDepartments.Select(dept =>
             {
-                // Get all routes involving this department (as source or destination)
                 var deptRoutes = routesInPeriod.Where(r =>
                     r.ToDepartmentId == dept.Id || r.FromDepartmentId == dept.Id).ToList();
 
-                // Count unique products transferred to/from this department
                 var uniqueProductIds = deptRoutes
                     .Select(r => r.ProductId)
                     .Distinct()
                     .ToHashSet();
 
-                // Count unique workers in this department during transfers
+                // Only the worker on this department's side of each transfer counts.
                 var uniqueWorkers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var route in deptRoutes.Where(r => r.ToDepartmentId == dept.Id))
@@ -310,7 +279,7 @@ namespace InventoryManagement.Web.Controllers
                     PeriodTransfers = deptRoutes.Count
                 };
             })
-            .Where(d => d.PeriodTransfers > 0) // Only show departments with activity
+            .Where(d => d.PeriodTransfers > 0)
             .OrderByDescending(d => d.PeriodTransfers)
             .ThenByDescending(d => d.ProductCount)
             .Take(5)
@@ -319,11 +288,7 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Process category distribution based on transfer activity
-        /// Shows which categories were involved in transfers during the period
-        /// KEY CHANGE: We look at categories of products that were TRANSFERRED, not created
-        /// </summary>
+        /// <summary>Products per category among those transferred in the period, not those created in it.</summary>
         private void ProcessCategoryDistribution(
             DashboardViewModel model,
             List<RouteViewModel> routesInPeriod,
@@ -339,52 +304,47 @@ namespace InventoryManagement.Web.Controllers
             var categories = categoriesResult.Items.Where(c => c.IsActive).ToList();
             var products = allProducts.Items.ToList();
 
-            // Professional color palette with maximum contrast and distinction
-            // These colors are chosen to be as visually different as possible
+            // Neighbouring colours are far apart so chart slices stay easy to tell apart.
             var professionalColors = new[]
             {
-                "#FF6B6B", // Coral Red - warm and inviting
-                "#4ECDC4", // Turquoise - fresh and clear
-                "#FFD93D", // Golden Yellow - bright and cheerful
-                "#6BCF7F", // Fresh Green - natural and positive
-                "#FF8C42", // Tangerine Orange - energetic
-                "#A78BFA", // Soft Purple - creative and modern
-                "#FF6BB5", // Pink Rose - friendly and distinct
-                "#4DA8FF", // Sky Blue - calm and clear
-                "#7FD1AE", // Mint Green - refreshing
-                "#FFB84D", // Warm Amber - inviting
-                "#B4A7D6", // Lavender - soft but distinct
-                "#FF8585", // Salmon - warm alternative to red
-                "#5DADE2", // Ocean Blue - professional
-                "#82E0AA", // Light Emerald - bright green
-                "#F8B739"  // Sunflower Yellow - vibrant gold
+                "#FF6B6B", // Coral red
+                "#4ECDC4", // Turquoise
+                "#FFD93D", // Golden yellow
+                "#6BCF7F", // Green
+                "#FF8C42", // Tangerine
+                "#A78BFA", // Soft purple
+                "#FF6BB5", // Pink
+                "#4DA8FF", // Sky blue
+                "#7FD1AE", // Mint
+                "#FFB84D", // Amber
+                "#B4A7D6", // Lavender
+                "#FF8585", // Salmon
+                "#5DADE2", // Ocean blue
+                "#82E0AA", // Light emerald
+                "#F8B739"  // Sunflower
             };
 
             if (!routesInPeriod.Any())
             {
-                // No transfers in period
                 model.CategoryDistributions = new List<CategoryDistribution>();
                 return;
             }
 
-            // Get product IDs that were transferred during the period
             var transferredProductIds = routesInPeriod
                 .Select(r => r.ProductId)
                 .Distinct()
                 .ToHashSet();
 
-            // Find categories of transferred products
             var transferredProducts = products
                 .Where(p => transferredProductIds.Contains(p.Id))
                 .ToList();
 
-            // Count how many products from each category were transferred
             var categoryCounts = transferredProducts
                 .GroupBy(p => p.CategoryId)
                 .ToDictionary(g => g.Key, g => g.Count());
 
             model.CategoryDistributions = categories
-                .Where(c => categoryCounts.ContainsKey(c.Id)) // Only categories with transfers
+                .Where(c => categoryCounts.ContainsKey(c.Id))
                 .Select((category, index) =>
                 {
                     return new CategoryDistribution
@@ -406,10 +366,7 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Generate transfer activity data for charts
-        /// Groups transfers by appropriate time periods
-        /// </summary>
+        /// <summary>Chart buckets are days for 7 days, weeks for 30 days, months for 6 months and quarters for all time.</summary>
         private void ProcessTransferActivity(
             DashboardViewModel model,
             List<RouteViewModel> routesInPeriod,
@@ -435,7 +392,6 @@ namespace InventoryManagement.Web.Controllers
             switch (period.ToLower())
             {
                 case "last7days":
-                    // Show each of the last 7 days
                     for (int i = 6; i >= 0; i--)
                     {
                         var date = DateTime.Now.Date.AddDays(-i);
@@ -448,7 +404,6 @@ namespace InventoryManagement.Web.Controllers
                     break;
 
                 case "last30days":
-                    // Group by weeks (approximately 4-5 weeks)
                     var currentWeekStart = startDate;
                     int weekNumber = 1;
 
@@ -466,16 +421,15 @@ namespace InventoryManagement.Web.Controllers
                         completedData.Add(weekRoutes.Count(r => r.IsCompleted));
                         pendingData.Add(weekRoutes.Count(r => !r.IsCompleted));
 
-                        currentWeekStart = currentWeekStart.AddDays(7); // Changed from weekEnd
+                        currentWeekStart = currentWeekStart.AddDays(7); // Not weekEnd, which is clamped and would loop forever
                         weekNumber++;
 
-                        // Safety check to prevent infinite loop
+                        // Guard against an endless loop.
                         if (weekNumber > 10) break;
                     }
                     break;
 
                 case "last6months":
-                    // Show each of the last 6 months
                     for (int i = 5; i >= 0; i--)
                     {
                         var monthStart = DateTime.Now.AddMonths(-i).Date;
@@ -493,7 +447,6 @@ namespace InventoryManagement.Web.Controllers
                     break;
 
                 case "all":
-                    // Group by quarters
                     var firstDate = routesInPeriod.Min(r => r.CreatedAt);
                     var quarterStart = new DateTime(firstDate.Year, ((firstDate.Month - 1) / 3) * 3 + 1, 1);
 
@@ -526,9 +479,6 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>
-        /// Create an empty dashboard model for error cases
-        /// </summary>
         private DashboardViewModel GetEmptyDashboard(string period)
         {
             return new DashboardViewModel

@@ -159,41 +159,31 @@
     <script src="~/js/ajaxHandler.js" asp-append-version="true"></script>
     <script>
         $(document).ready(function() {
-            // Our submission guard flag - starts as false because nothing is submitting yet
+            // Stops a double click from creating the same product twice.
             let isSubmitting = false;
 
-            // Store the submit button and its original appearance
             const $submitBtn = $('button[type="submit"]');
             const originalButtonHtml = $submitBtn.html();
 
-            // Initialize the form with AjaxHandler
             AjaxHandler.handleForm('form', {
                 successMessage: 'Product created successfully!',
                 successRedirect: '@Url.Action("Index")',
                 redirectDelay: 1500,
 
                 onBeforeSubmit: function(form) {
-                    // THE CRITICAL CHECKPOINT: Check if we're already creating a product
-                    // This happens before any validation, before any processing
-                    // If someone clicked the button 5 times, only the first click gets past this point
                     if (isSubmitting) {
                         console.log('Product creation already in progress, blocking duplicate submission');
-                        return false; // Stop right here - don't proceed with submission
+                        return false;
                     }
 
-                    // LOCK THE GATE: Mark that we're now in the process of creating a product
-                    // Any subsequent clicks will be blocked by the check above
                     isSubmitting = true;
                     console.log('Product creation submission started');
 
-                    // Let the submission proceed normally
-                    // The AjaxHandler will handle validation and button state
                     return true;
                 },
 
                 onSuccess: function(response) {
-                    // Check if this requires approval
-                    // This can happen if a user without direct create permission tries to create
+                    // Without the direct create permission the product goes to approval instead.
                     if (response.isApprovalRequest || response.approvalRequestId) {
                         showToast(
                             response.message || 'Product creation submitted for approval',
@@ -201,34 +191,28 @@
                             3000
                         );
 
-                        // Still redirect - the product creation is pending approval
                         setTimeout(() => {
                             window.location.href = '@Url.Action("Index")';
                         }, 2000);
 
-                        return false; // We're handling the redirect
+                        return false; // Skip AjaxHandler's own redirect
                     }
 
-                    // Normal success case - product was created directly
-                    return true; // Let AjaxHandler handle the success flow
+                    return true;
                 },
 
                 onError: function(errorMessage, response) {
-                    // CRITICAL: Reset the flag when an error occurs
-                    // This allows the user to fix their mistake and try again
+                    // Unlock so the form can be fixed and sent again.
                     isSubmitting = false;
 
-                    // Restore the button so they can click it again
                     $submitBtn.prop('disabled', false).html(originalButtonHtml);
 
                     console.error('Product creation error:', errorMessage);
-                    // The error will be shown by AjaxHandler
+                    // AjaxHandler shows the message itself.
                 }
             });
         });
 
-        // Helper function for image preview
-        // This is separate from the submission logic and doesn't need protection
         function previewImage(input, previewId) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();

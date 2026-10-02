@@ -264,7 +264,7 @@
         </div>
     </div>
 
-    <!-- Hidden form for CSRF token -->
+    <!-- Holds the antiforgery token for the complete and delete calls -->
     <form id="csrfForm" style="display: none;">
         @Html.AntiForgeryToken()
     </form>
@@ -278,22 +278,18 @@
     <script src="~/js/pdf-export.js" asp-append-version="true"></script>
     <script>
             function exportRouteToPDF() {
-                // Create a new PDF document
                 const doc = new jsPDF({
                     orientation: 'landscape',
                     unit: 'mm'
                 });
 
-                // Add title
                 doc.setFontSize(18);
                 doc.text('Routes Report', 105, 15, { align: 'center' });
 
-                // Add date
                 doc.setFontSize(10);
                 const today = new Date();
                 doc.text(`Generated on: ${today.toLocaleDateString()} ${today.toLocaleTimeString()}`, 105, 22, { align: 'center' });
 
-                // Define columns
                 const columns = [
                     { title: "Date", dataKey: "date" },
                     { title: "Type", dataKey: "type" },
@@ -306,33 +302,27 @@
                     { title: "Completed At", dataKey: "completedAt" }
                 ];
 
-                // Extract data from table rows
+                // Rows are read back from the rendered table, so these cell indexes must follow its column order.
                 const rows = [];
                 const tableRows = document.querySelectorAll('#routesTableBody tr');
 
                 tableRows.forEach(row => {
                     const cells = row.querySelectorAll('td');
 
-                    // Extract date
                     const dateText = cells[1].querySelector('small').textContent.trim();
                     const [date, time] = dateText.split('\n').map(s => s.trim());
 
-                    // Extract type
                     const type = cells[2].textContent.trim();
 
-                    // Extract product details
                     const productDetails = cells[3];
                     const inventoryCode = productDetails.querySelector('.badge').textContent.trim();
                     const vendor = productDetails.textContent.replace(inventoryCode, '').trim().split('\n')[0];
                     const category = productDetails.querySelector('.text-muted').textContent.replace('⏏', '').trim();
 
-                    // Extract from department
                     const fromDept = cells[4].querySelector('div').textContent.trim();
 
-                    // Extract to department
                     const toDept = cells[5].querySelector('div').textContent.trim();
 
-                    // Extract status
                     const statusBadge = cells[6].querySelector('.badge');
                     let status = statusBadge.textContent.trim();
                     let completedAt = '';
@@ -344,7 +334,6 @@
                         completedAt = 'N/A';
                     }
 
-                    // Add to rows array
                     rows.push({
                         date: `${date} ${time}`,
                         type: type,
@@ -358,7 +347,6 @@
                     });
                 });
 
-                // Add table to PDF
                 doc.autoTable({
                     head: [columns.map(col => col.title)],
                     body: rows.map(row => columns.map(col => row[col.dataKey])),
@@ -390,13 +378,11 @@
                     }
                 });
 
-                // Save the PDF
                 doc.save(`Routes_Report_${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}.pdf`);
                 }
     </script>
     <script>
         $(document).ready(function() {
-            // Initialize date range picker
                     $('#dateRange').daterangepicker({
                         autoUpdateInput: false,
                         locale: {
@@ -416,17 +402,14 @@
                     restoreFilterValues();
                 });
 
-            // Restore filter values from URL parameters
         function restoreFilterValues() {
             const params = new URLSearchParams(window.location.search);
 
-            // Restore search
             const search = params.get('search');
             if (search) {
                 $('#searchInput').val(search);
             }
 
-            // Restore date range
             const startDate = params.get('startDate');
             const endDate = params.get('endDate');
             if (startDate && endDate) {
@@ -435,14 +418,12 @@
                 $('#dateRange').val(formattedStart + ' - ' + formattedEnd);
             }
 
-            // Restore status filter
             const status = params.get('status');
             if (status !== null) {
                 $('#statusFilter').val(status);
             }
         }
 
-        // Apply all filters and reload the page with query parameters
         function applyRouteFilters() {
             const params = new URLSearchParams();
 
@@ -451,7 +432,7 @@
                 params.append('search', searchTerm);
             }
 
-            // Get date range value
+            // The picker shows MM/DD/YYYY but the URL carries ISO dates.
             const dateRange = $('#dateRange').val();
             if (dateRange) {
                 const dates = dateRange.split(' - ');
@@ -463,21 +444,17 @@
                 }
             }
 
-            // Get status filter value
             const status = $('#statusFilter').val();
             if (status !== '') {
                 params.append('status', status);
             }
 
-            // Maintain page size
             params.append('pageSize', '@Model.PageSize');
             params.append('pageNumber', '1');
 
-            // Build the URL property
             window.location.href = '/Routes?' + params.toString();
         }
 
-        // Make search work on Enter key
         $('#searchInput').on('keypress', function(e) {
             if (e.which === 13) {
                 applyRouteFilters();
@@ -494,7 +471,7 @@
         function formatLocalDateTime(utcDateString) {
             const date = new Date(utcDateString);
             return date.toLocaleString('en-US', {
-                timeZone: 'Asia/Baku', // Azerbaijan timezone
+                timeZone: 'Asia/Baku', // Baku time whatever the browser's zone
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
@@ -504,12 +481,10 @@
         }
 
 
-        // Change page with current filters maintained
                 function changePage(page) {
             const params = new URLSearchParams(window.location.search);
             params.set('pageNumber', page);
 
-            // Ensure we always have pageSize
             if (!params.has('pageSize')) {
                 params.set('pageSize', '@Model.PageSize');
             }
@@ -532,7 +507,6 @@
                         'RequestVerificationToken': document.querySelector('#csrfForm input[name="__RequestVerificationToken"]').value
                     },
                     success: function(response) {
-                        // Reload after a short delay
                         setTimeout(function() {
                             window.location.reload();
                         }, 1500);
@@ -563,7 +537,7 @@
                 }
     </script>
     <script>
-        // Real-time search functionality
+        // Search as you type, submitting the form once typing pauses.
         let searchTimeout;
         const searchInput = document.getElementById('searchInput');
         const searchForm = document.getElementById('searchForm');
@@ -572,7 +546,6 @@
             searchInput.addEventListener('input', function(e) {
                 clearTimeout(searchTimeout);
 
-                // Show loading indicator
                 const submitBtn = searchForm.querySelector('button[type="submit"]');
                 if (submitBtn) {
                     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Searching...';
@@ -580,11 +553,10 @@
 
                 searchTimeout = setTimeout(() => {
                     searchForm.submit();
-                }, 500); // Wait 500ms after user stops typing
+                }, 500);
             });
         }
 
-        // Update the showing text dynamically
         function updateShowingText() {
             const totalCount = @(ViewBag.TotalCount ?? 0);
             const showingStart = @(ViewBag.ShowingStart ?? 0);
@@ -600,7 +572,6 @@
             }
         }
 
-        // Call on page load
         document.addEventListener('DOMContentLoaded', updateShowingText);
     </script>
     <style>
@@ -636,10 +607,9 @@
         }
     
         #routesTable tbody tr {
-            font-weight: normal; /* Ensure body rows are normal weight */
+            font-weight: normal;
         }
-    
-        /* Additional styles matching products view */
+
         #routesTable tbody td {
             vertical-align: middle;
             font-weight: 400;

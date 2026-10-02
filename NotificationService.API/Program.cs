@@ -69,7 +69,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials(); // Critical for SignalR
+              .AllowCredentials(); // SignalR needs credentials allowed.
     });
 });
 
@@ -99,6 +99,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnMessageReceived = context =>
             {
+                // WebSockets can't carry headers, so SignalR sends the token in the query string.
                 var accessToken = context.Request.Query["access_token"];
                 var path = context.HttpContext.Request.Path;
                 if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/notificationHub"))
@@ -129,7 +130,6 @@ builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>(client =>
 })
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
-        // Configure handler for better reliability
         MaxConnectionsPerServer = 10,
         AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
     });

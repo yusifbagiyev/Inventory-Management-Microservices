@@ -93,7 +93,6 @@ namespace InventoryManagement.Web.Services
         {
             var today = DateTime.Today;
 
-            // Get all requests for statistics
             var allRequests = await GetAllRequestsAsync();
 
             return new ApprovalStatisticsDto

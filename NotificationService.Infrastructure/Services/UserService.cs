@@ -112,7 +112,6 @@ namespace NotificationService.Infrastructure.Services
 
         private void SetSystemAuthorizationHeader()
         {
-            // Generate a system token with Admin role
             var token = GenerateSystemToken();
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             _logger.LogDebug("Set authorization header with system token");
@@ -126,9 +125,9 @@ namespace NotificationService.Infrastructure.Services
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[] {
-                    new Claim(ClaimTypes.NameIdentifier, "0"), // System user ID
+                    new Claim(ClaimTypes.NameIdentifier, "0"),
                     new Claim(ClaimTypes.Name, "System"),
-                    new Claim(ClaimTypes.Role, "Admin"), // Give it Admin role to access user endpoints
+                    new Claim(ClaimTypes.Role, "Admin"), // The user endpoints in IdentityService are admin-only.
                     new Claim(ClaimTypes.Role, "System")
                 }),
                 Expires = DateTime.Now.AddMinutes(5),

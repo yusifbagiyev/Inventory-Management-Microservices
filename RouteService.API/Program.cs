@@ -34,7 +34,6 @@ builder.Host.UseSerilog();
 
 Log.Information("Starting RouteService API");
 
-// Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -46,7 +45,6 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Route Service with JWT Authentication"
     });
 
-    //Add JWT Authentication support
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -74,7 +72,6 @@ builder.Services.AddSwaggerGen(options =>
         });
 });
 
-//Add Cors policy
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -86,14 +83,11 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Add AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// Add layers
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-//Add JWT Authentication configuration
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -109,10 +103,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Add authorization with permissions
 builder.Services.AddAuthorization(options =>
 {
-    //Add permission policies
     options.AddPolicy(AllPermissions.RouteView, policy =>
         policy.Requirements.Add(new PermissionRequirement(AllPermissions.RouteView)));
     options.AddPolicy(AllPermissions.RouteCreate, policy =>
@@ -135,7 +127,6 @@ builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
 var app = builder.Build();
 
-// Configure pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -151,7 +142,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Apply migrations
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<RouteDbContext>();

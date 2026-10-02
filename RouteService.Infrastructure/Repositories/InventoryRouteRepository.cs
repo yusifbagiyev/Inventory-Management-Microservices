@@ -107,7 +107,7 @@ namespace RouteService.Infrastructure.Repositories
             {
                 search = search.Trim();
 
-                // Apply broad database filter first
+                // ILIKE narrows the rows in SQL but misses Azerbaijani letter variants.
                 var broadQuery = query.Where(r =>
                     EF.Functions.ILike(r.ProductSnapshot.InventoryCode.ToString(), $"%{search}%") ||
                     EF.Functions.ILike(r.ProductSnapshot.CategoryName, $"%{search}%") ||
@@ -124,7 +124,6 @@ namespace RouteService.Infrastructure.Repositories
                     .ThenByDescending(r => r.CompletedAt)
                     .ToListAsync(cancellationToken);
 
-                // Apply Azerbaijani-aware search in memory
                 items = allFilteredItems.Where(r =>
                     SearchHelper.ContainsAzerbaijani(r.ProductSnapshot.InventoryCode.ToString(), search) ||
                     SearchHelper.ContainsAzerbaijani(r.ProductSnapshot.CategoryName, search) ||

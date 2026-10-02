@@ -34,7 +34,7 @@ namespace ApprovalService.Application.Features.Commands
                 if (approvalRequest.Status != ApprovalStatus.Pending)
                     throw new InvalidOperationException("Only pending requests can be cancelled");
 
-                // Publish cancellation event before deleting
+                // Publish while the request still exists, it is deleted right after.
                 var cancelEvent = new ApprovalRequestCancelledEvent
                 {
                     RequestId = approvalRequest.Id,
