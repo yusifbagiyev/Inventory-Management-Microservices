@@ -197,6 +197,7 @@ namespace ProductService.API.Controllers
 
 
 
+        // The approved endpoints are called by ApprovalService with an admin token once a request is approved
         [HttpPost("approved/multipart")]
         [ApiExplorerSettings(IgnoreApi = true)]
         [Authorize(Roles = "Admin")]
@@ -330,6 +331,7 @@ namespace ProductService.API.Controllers
 
 
 
+        // The id here is a department id, not a product id
         [HttpGet("{id}/statistics")]
         [Permission(AllPermissions.ProductView)]
         public async Task<ActionResult<DepartmentStatisticsDto>> GetDepartmentStatistics(int id)

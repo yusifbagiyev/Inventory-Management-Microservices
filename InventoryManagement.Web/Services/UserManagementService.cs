@@ -211,7 +211,7 @@ namespace InventoryManagement.Web.Services
 
                 var roleUpdateSuccess = await UpdateUserRolesAsync(model.Id, model.CurrentRoles, model.SelectedRoles ?? new List<string>());
 
-                // The user details are saved by now, so a failed role change is only logged.
+                // The user details are saved by now, so a failed role change is only logged
                 if (!roleUpdateSuccess)
                 {
                     _logger.LogWarning("User info updated but role update failed for user {UserId}", model.Id);
@@ -336,13 +336,14 @@ namespace InventoryManagement.Web.Services
             {
                 _logger.LogError(ex, "Error getting all roles");
             }
+            // Fall back to the usual roles so the user form still has choices
             return new List<string> { "Admin", "Manager", "User" };
         }
 
 
         private string FormatPermissionName(string permission)
         {
-            // Product.View becomes View Products.
+            // Product.View becomes View Products
             var parts = permission.Split('.');
             if (parts.Length == 2)
             {
@@ -363,7 +364,7 @@ namespace InventoryManagement.Web.Services
 
         private string GetPermissionDescription(string permission)
         {
-            // Permissions missing here get an empty description.
+            // Permissions missing here get an empty description
             var descriptions = new Dictionary<string, string>
             {
                 ["Product.View"] = "View product information",

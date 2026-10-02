@@ -18,7 +18,7 @@ namespace InventoryManagement.Web.Services
             _logger = logger;
         }
 
-        // Meant only for the SignalR connection. Every other call sends the token server side.
+        /// <summary>Only for the SignalR connection, since every other call adds the token server side.</summary>
         public async Task<string?> GetTokenForSignalRAsync()
         {
             var context = _httpContextAccessor.HttpContext;
@@ -50,7 +50,7 @@ namespace InventoryManagement.Web.Services
                 return false;
             }
 
-            // The cookie can outlive the API token, so the session counts only if a token is still available.
+            // The cookie can outlive the API token, so the session only counts while a token is left
             var token = await _tokenManager.GetValidTokenAsync();
             return !string.IsNullOrEmpty(token);
         }

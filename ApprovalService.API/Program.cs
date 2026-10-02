@@ -76,6 +76,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
         };
     })
+    // Scheme for tokens of automated actions, which checks neither issuer, lifetime nor signature
     .AddJwtBearer("System", options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters

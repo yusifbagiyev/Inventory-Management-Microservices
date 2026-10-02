@@ -302,7 +302,7 @@
                     { title: "Completed At", dataKey: "completedAt" }
                 ];
 
-                // Rows are read back from the rendered table, so these cell indexes must follow its column order.
+                // Rows are read back from the table, so these cell indexes must follow its column order
                 const rows = [];
                 const tableRows = document.querySelectorAll('#routesTableBody tr');
 
@@ -432,7 +432,7 @@
                 params.append('search', searchTerm);
             }
 
-            // The picker shows MM/DD/YYYY but the URL carries ISO dates.
+            // The picker shows MM/DD/YYYY but the URL carries ISO dates
             const dateRange = $('#dateRange').val();
             if (dateRange) {
                 const dates = dateRange.split(' - ');
@@ -537,7 +537,7 @@
                 }
     </script>
     <script>
-        // Search as you type, submitting the form once typing pauses.
+        // Search as you type, submitting the form once typing pauses
         let searchTimeout;
         const searchInput = document.getElementById('searchInput');
         const searchForm = document.getElementById('searchForm');

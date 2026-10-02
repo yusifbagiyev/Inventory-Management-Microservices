@@ -275,7 +275,7 @@
 @section Scripts {
     <script src="~/js/pdf-export.js" asp-append-version="true"></script>
     <script>
-        // All rows of the page, kept so a filter can bring back rows an earlier filter removed.
+        // All rows of the page, kept so a filter can bring back rows an earlier filter removed
         let categoryRows = [];
 
         $(document).ready(function() {
@@ -288,7 +288,7 @@
             restoreFilterValues();
         });
 
-        // The search box is applied on the server, so only status and sort run here.
+        // The search box is applied on the server, so only status and sort run here
         function filterCategories() {
             const statusFilter = $('#statusFilter').val();
             const sortBy = $('#sortBy').val();

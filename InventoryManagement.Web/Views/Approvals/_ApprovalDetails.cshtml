@@ -1,4 +1,5 @@
 ﻿@model ApprovalRequestDto
+@* Request details for the dialog on the Approvals and My Requests pages *@
 
 <div class="approval-details">
     <div class="row">
@@ -107,7 +108,7 @@
         }
         catch (Exception ex)
         {
-            // The data does not fit the typed view, so show the raw JSON instead.
+            // The data does not fit the typed view, so show the raw JSON instead
             try
             {
                 var parsed = Newtonsoft.Json.Linq.JToken.Parse(actionData);
@@ -122,6 +123,7 @@
 
     string ParseProductCreateData(dynamic data)
     {
+        // Some requests nest the product fields under ProductData
         var productData = data.ProductData ?? data;
         var html = new System.Text.StringBuilder();
 
@@ -265,7 +267,7 @@
     {
         try
         {
-            // Stored action data comes in both camelCase and PascalCase.
+            // Stored action data comes in both camelCase and PascalCase
             if (obj[camelCase] != null)
             {
                 return (bool)obj[camelCase];

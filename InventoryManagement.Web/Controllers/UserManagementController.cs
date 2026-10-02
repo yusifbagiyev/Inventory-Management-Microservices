@@ -298,7 +298,7 @@ namespace InventoryManagement.Web.Controllers
         }
 
 
-        // Endpoints below are called from the page's scripts.
+        // Endpoints below are called from the page's scripts
         [HttpGet]
         public async Task<JsonResult?> GetUser(int id)
         {

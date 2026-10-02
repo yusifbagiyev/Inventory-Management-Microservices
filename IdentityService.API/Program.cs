@@ -88,16 +88,16 @@ builder.Services.AddRateLimiter(options =>
     {
         var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
 
-        // Behind nginx the client address only arrives in X-Forwarded-For.
+        // Behind nginx the client address only arrives in X-Forwarded-For
         var forwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();
         string clientIp;
 
         if (!string.IsNullOrEmpty(forwardedFor))
         {
-            // The first address in the chain is the client.
+            // The first address in the chain is the client
             clientIp = forwardedFor.Split(',')[0].Trim();
 
-            // Strip the IPv4-mapped IPv6 prefix.
+            // Strip the IPv4-mapped IPv6 prefix
             if (clientIp.StartsWith("::ffff:"))
             {
                 clientIp = clientIp.Substring(7);
@@ -107,7 +107,7 @@ builder.Services.AddRateLimiter(options =>
         }
         else
         {
-            // Only happens when the service is called without nginx in front.
+            // Only happens when the service is called without nginx in front
             clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             logger.LogWarning("No X-Forwarded-For header found, using RemoteIP: {ClientIp}", clientIp);
         }
@@ -233,7 +233,7 @@ if (app.Environment.IsDevelopment())
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
-    // Empty lists mean any proxy is trusted.
+    // Empty lists mean any proxy is trusted
     KnownNetworks = { },
     KnownProxies = { },
     ForwardLimit = null,

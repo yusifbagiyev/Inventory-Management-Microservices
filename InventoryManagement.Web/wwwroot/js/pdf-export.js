@@ -1,4 +1,5 @@
-﻿function exportProductsToPDF() {
+﻿// PDF exports clone a list table, strip it down and print it from a new window
+function exportProductsToPDF() {
     const table = document.getElementById('productsTable');
     if (!table) {
         showToast('Products table not found', 'error');
@@ -7,7 +8,7 @@
 
     const tableClone = table.cloneNode(true);
 
-    // The Image and Actions columns are left out of the PDF.
+    // The Image and Actions columns are left out of the PDF
     const headers = tableClone.querySelectorAll('th');
     headers[0].remove();
     headers[headers.length - 1].remove();
@@ -18,7 +19,7 @@
         cells[0].remove();
         cells[cells.length - 1].remove();
 
-        // The cells list is static, so its indexes still match the original columns.
+        // The cells list is static, so its indexes still match the original columns
         const codeCell = cells[1];
         if (codeCell) {
             const badge = codeCell.querySelector('.badge');
@@ -41,7 +42,7 @@
         }
     });
 
-    // Image and Actions are gone, so Location is the 3rd column and Status the 4th.
+    // Image and Actions are gone, so Location is the 3rd column and Status the 4th
     tableClone.querySelectorAll('td:nth-child(3)').forEach(cell => {
         const deptText = cell.textContent.trim();
         const parts = deptText.split('(');
@@ -57,7 +58,7 @@
         }
     });
 
-    // Status shows the working and active badges one per line.
+    // Status shows the working and active badges one per line
     tableClone.querySelectorAll('td:nth-child(4)').forEach(cell => {
         const badges = cell.querySelectorAll('.badge');
         let statusHTML = '';
@@ -127,7 +128,7 @@ function exportRoutesToPDF() {
         });
     });
 
-    // The columns left are Date, Type, Product, From, To and Status.
+    // The columns left are Date, Type, Product, From, To and Status
     tableClone.querySelectorAll('td:nth-child(3)').forEach(cell => {
         const badge = cell.querySelector('.badge');
         const vendorModel = cell.textContent.replace(badge?.textContent || '', '').trim();
@@ -158,7 +159,7 @@ function exportRoutesToPDF() {
         `;
     });
 
-    // Status keeps only its badge text.
+    // Status keeps only its badge text
     tableClone.querySelectorAll('td:nth-child(6)').forEach(cell => {
         cell.querySelectorAll('i').forEach(icon => icon.remove());
         cell.querySelectorAll('br').forEach(br => br.remove());
@@ -322,7 +323,7 @@ function exportToPDF(tableHTML, filename, title, customStyles = '') {
     printWindow.document.write(documentContent);
     printWindow.document.close();
 
-    // Print a moment after load so the layout has settled.
+    // Print a moment after load so the layout has settled
     printWindow.onload = function () {
         setTimeout(() => {
             printWindow.print();
@@ -462,7 +463,7 @@ function exportDepartmentsToPDF() {
     const tableClone = table.cloneNode(true);
     tableClone.id = 'departmentsPdfTable';
 
-    // The last column holds the action buttons.
+    // The last column holds the action buttons
     const headers = tableClone.querySelectorAll('th');
     headers[headers.length - 1].remove();
 
@@ -473,7 +474,7 @@ function exportDepartmentsToPDF() {
         }
     });
 
-    // Department name without its icon.
+    // Department name without its icon
     tableClone.querySelectorAll('td:first-child').forEach(cell => {
         const textDiv = cell.querySelector('.fw-semibold');
         if (textDiv) {
@@ -530,7 +531,7 @@ function exportCategoriesToPDF() {
     const tableClone = table.cloneNode(true);
     tableClone.id = 'categoriesPdfTable';
 
-    // The last column holds the action buttons.
+    // The last column holds the action buttons
     const headers = tableClone.querySelectorAll('th');
     headers[headers.length - 1].remove();
 
@@ -541,7 +542,7 @@ function exportCategoriesToPDF() {
         }
     });
 
-    // Category name without its icon.
+    // Category name without its icon
     tableClone.querySelectorAll('td:first-child').forEach(cell => {
         const textDiv = cell.querySelector('div:last-child');
         if (textDiv) {

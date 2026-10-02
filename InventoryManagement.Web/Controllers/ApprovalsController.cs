@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryManagement.Web.Controllers
 {
+    /// <summary>Admin page where pending approval requests are approved or rejected.</summary>
     [Authorize(Roles = "Admin")]
     public class ApprovalsController : BaseController
     {

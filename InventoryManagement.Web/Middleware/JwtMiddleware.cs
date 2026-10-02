@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace InventoryManagement.Web.Middleware
 {
+    /// <summary>Puts a valid JWT on each signed-in request and signs the user out when it can't be renewed.</summary>
     public class JwtMiddleware
     {
         private readonly RequestDelegate _next;
@@ -25,7 +26,7 @@ namespace InventoryManagement.Web.Middleware
                 return;
             }
 
-            // Relies on UseAuthentication running before this middleware.
+            // Relies on UseAuthentication running before this middleware
             if (context.User?.Identity?.IsAuthenticated == true)
             {
                 using var scope = context.RequestServices.CreateScope();
@@ -37,7 +38,7 @@ namespace InventoryManagement.Web.Middleware
 
                     if (!string.IsNullOrEmpty(token))
                     {
-                        // ApiService picks the token up from here.
+                        // ApiService picks the token up from here
                         context.Items["JwtToken"] = token;
 
                         context.Session.SetString("LastActivity", DateTime.Now.ToString("o"));
@@ -49,7 +50,7 @@ namespace InventoryManagement.Web.Middleware
                         _logger.LogWarning("Could not obtain valid JWT token for authenticated user {User}",
                             context.User.Identity.Name);
 
-                        // The cookie is still valid, so most likely the refresh token expired.
+                        // The cookie is still valid, so most likely the refresh token expired
                         await HandleTokenFailure(context);
                         return;
                     }

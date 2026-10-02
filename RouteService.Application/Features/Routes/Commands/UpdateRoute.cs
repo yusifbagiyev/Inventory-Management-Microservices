@@ -69,7 +69,7 @@ namespace RouteService.Application.Features.Routes.Commands
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
                     await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
-                    // Only after the commit, so a failed update keeps the old image.
+                    // Delete the old image only after the commit, so a failed update keeps it
                     if (!string.IsNullOrEmpty(oldImageUrl) && !string.IsNullOrEmpty(newImageUrl))
                     {
                         await _imageService.DeleteImageAsync(oldImageUrl);

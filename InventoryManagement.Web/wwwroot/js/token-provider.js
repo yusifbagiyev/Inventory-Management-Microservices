@@ -1,10 +1,10 @@
-﻿// Gets the API token from the server when needed. It lives only in memory, never in the DOM or localStorage.
+﻿// Fetches the API token from the server and keeps it in memory only, never in the DOM or storage
 window.SecureTokenProvider = (function () {
     'use strict';
 
     let cachedToken = null;
     let tokenExpiryTime = null;
-    // Shared by concurrent callers so only one request goes to the server.
+    // Shared by concurrent callers so only one request goes to the server
     let fetchPromise = null;
 
     async function getToken() {
@@ -54,7 +54,7 @@ window.SecureTokenProvider = (function () {
                 throw new Error('No token in response');
             }
 
-            // Short cache so a token refreshed on the server is picked up soon.
+            // Short cache so a token refreshed on the server is picked up soon
             cachedToken = data.token;
             tokenExpiryTime = Date.now() + (2 * 60 * 1000);
 
@@ -69,7 +69,7 @@ window.SecureTokenProvider = (function () {
         }
     }
 
-    // Call on logout or when the server rejects the token.
+    // Call on logout or when the server rejects the token
     function clearToken() {
         console.log('Clearing cached token');
         cachedToken = null;

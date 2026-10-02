@@ -11,6 +11,7 @@ using System.Text.Json;
 
 namespace ApprovalService.Infrastructure.Services
 {
+    /// <summary>Runs an approved request by calling the owning service's approved endpoints over HTTP.</summary>
     public class ActionExecutor:IActionExecutor
     {
         private readonly HttpClient _httpClient;
@@ -58,7 +59,7 @@ namespace ApprovalService.Infrastructure.Services
             }
         }
 
-        // A short-lived admin token, so the target service runs the action directly instead of asking for approval again.
+        // Signs a short-lived admin token so the target service skips approval and runs the action
         private void AddAuthorizationHeader()
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -103,7 +104,7 @@ namespace ApprovalService.Infrastructure.Services
                 var jsonDoc = JsonDocument.Parse(actionData);
                 var root = jsonDoc.RootElement;
 
-                // Older requests nest the fields under ProductData, newer ones keep them flat.
+                // Older requests nest the fields under ProductData, newer ones keep them flat
                 JsonElement productElement = GetProductElement(root);
 
                 var inventoryCode = GetIntProperty(productElement, "inventoryCode", "InventoryCode");
@@ -476,7 +477,7 @@ namespace ApprovalService.Infrastructure.Services
             {
                 try
                 {
-                    // Strip the data URL prefix if the image came as one.
+                    // Strip the data URL prefix if the image came as one
                     if (base64Data.Contains(","))
                     {
                         base64Data = base64Data.Split(',')[1];
@@ -511,6 +512,7 @@ namespace ApprovalService.Infrastructure.Services
             return null;
         }
 
+        // Older requests were stored in PascalCase, so every field is looked up in both casings
         private string GetStringProperty(JsonElement element, string camelCase, string pascalCase)
         {
             if (element.TryGetProperty(camelCase, out var prop))

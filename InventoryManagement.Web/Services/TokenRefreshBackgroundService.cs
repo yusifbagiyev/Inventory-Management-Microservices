@@ -2,6 +2,7 @@
 
 namespace InventoryManagement.Web.Services
 {
+    /// <summary>Every five minutes renews the token of the request in progress, if there is one.</summary>
     public class TokenRefreshBackgroundService : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
@@ -28,12 +29,12 @@ namespace InventoryManagement.Web.Services
                     {
                         var httpContextAccessor = scope.ServiceProvider.GetService<IHttpContextAccessor>();
 
-                        // Without a request there is no signed-in user whose token could be refreshed.
+                        // Without a request there is no signed-in user whose token could be refreshed
                         if (httpContextAccessor?.HttpContext != null)
                         {
                             var tokenManager = scope.ServiceProvider.GetRequiredService<ITokenManager>();
 
-                            // Refreshes the token when it is close to expiry.
+                            // Refreshes the token when it is close to expiry
                             await tokenManager.GetValidTokenAsync();
                         }
                     }

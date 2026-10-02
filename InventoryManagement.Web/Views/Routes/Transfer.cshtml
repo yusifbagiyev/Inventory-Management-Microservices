@@ -60,7 +60,7 @@
                         <!-- Warning Messages -->
                         <div id="warningContainer"></div>
 
-                        <!-- Hidden Product ID -->
+                        <!-- Filled in once a product is found by its code -->
                         <input type="hidden" asp-for="ProductId" id="ProductId" />
 
                         <!-- Transfer Fields -->
@@ -209,8 +209,7 @@
 
                     isSubmitting = true;
 
-                    // The flag is set before these checks, so each failed check must clear it again.
-
+                    // The flag is set before these checks, so each failed check must clear it again
                     if (!currentProductData || !$('#ProductId').val()) {
                         showError('Please search for and select a valid product first');
                         $('#inventoryCodeInput').focus();
@@ -375,7 +374,7 @@
                 showSuccess(`Product found: ${product.model} - Currently with ${product.worker || 'no worker'}`);
             }
 
-            // A product with an open transfer cannot be moved again until that one is completed.
+            // A product with an open transfer cannot be moved again until that one is completed
             async function checkPendingRoutes(productId) {
                 try {
                     const apiUrl = AppConfig.buildApiUrl(`inventoryroutes/product/${productId}`);

@@ -48,7 +48,7 @@ namespace InventoryManagement.Web.Controllers
                 if (endDate.HasValue)
                     queryString.Append($"&endDate={endDate.Value:yyyy-MM-dd}");
 
-                // Pending transfers first.
+                // Pending transfers first
                 queryString.Append("&orderBy=IsCompleted&ascending=true");
 
                 var routes = await _apiService.GetAsync<PagedResultDto<RouteViewModel>>(

@@ -3,6 +3,7 @@ using MediatR;
 
 namespace RouteService.Application.Behaviors
 {
+    /// <summary>Runs the request's validators before its handler and throws on any failure.</summary>
     public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
         where TRequest : notnull
     {

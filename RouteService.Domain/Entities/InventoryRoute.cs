@@ -3,6 +3,7 @@ using RouteService.Domain.ValueObjects;
 
 namespace RouteService.Domain.Entities
 {
+    /// <summary>A step in a product's history that keeps the product and department names of that moment.</summary>
     public class InventoryRoute
     {
         public int Id { get; private set; }
@@ -23,7 +24,7 @@ namespace RouteService.Domain.Entities
         // For EF Core
         protected InventoryRoute() { }
 
-        // A product entering the inventory, new or second-hand.
+        // A product entering the inventory, new or second-hand
         public static InventoryRoute CreateNewInventory(
             ProductSnapshot productSnapshot,
             int toDepartmentId,
@@ -82,7 +83,7 @@ namespace RouteService.Domain.Entities
 
 
 
-        // For removing from inventory
+        // A removal from the inventory is complete as soon as it is recorded
         public static InventoryRoute CreateRemoval(
             ProductSnapshot productSnapshot,
             int fromDepartmentId,

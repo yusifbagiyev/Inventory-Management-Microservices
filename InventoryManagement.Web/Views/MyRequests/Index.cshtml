@@ -192,7 +192,7 @@
                         let isSuccess = false;
                         let message = 'Request cancelled successfully';
 
-                        // Accept JSON in either casing as well as a plain-text reply.
+                        // Accept JSON in either casing as well as a plain-text reply
                         if (typeof response === 'object' && response !== null) {
                             isSuccess = response.success === true ||
                                        response.isSuccess === true ||
@@ -204,19 +204,19 @@
                             isSuccess = true;
                             message = response;
                         } else {
-                            // An empty 2xx reply counts as success.
+                            // An empty 2xx reply counts as success
                             isSuccess = true;
                         }
 
                         if (isSuccess) {
                             showToast(message, 'success');
 
-                            // Give the toast a moment before the reload.
+                            // Give the toast a moment before the reload
                             setTimeout(function() {
                                 window.location.reload();
                             }, 1500);
                         } else {
-                            // A 200 can still carry success: false.
+                            // A 200 reply can still report a failure
                             showToast(message || 'Failed to cancel request', 'error');
                             $cancelButton.prop('disabled', false).html(originalButtonText);
                         }

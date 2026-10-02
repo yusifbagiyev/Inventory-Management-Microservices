@@ -1,5 +1,6 @@
 ﻿namespace SharedServices.Services
 {
+    /// <summary>Text matching that ignores case and Azerbaijani letters.</summary>
     public static class SearchHelper
     {
         public static string NormalizeForSearch(string text)
@@ -9,7 +10,7 @@
 
             text = text.ToLowerInvariant();
 
-            // Fold Azerbaijani letters to ASCII so a search typed without them still matches.
+            // Fold Azerbaijani letters to ASCII so a search typed without them still matches
             var replacements = new Dictionary<char, char>
             {
                 {'ə', 'e'}, {'Ə', 'e'},

@@ -86,7 +86,7 @@
                                     <label class="form-label">Roles</label>
                                     <div class="role-selection border rounded p-3">
                                         @{
-                                            // Unticked checkboxes post nothing, so this tells the controller the roles were on the form.
+                                            // Unticked checkboxes post nothing, so this tells the controller roles were on the form
                                             <input type="hidden" name="RoleUpdateFlag" value="true" />
                                         }
                                         @foreach (var role in Model.AvailableRoles)
@@ -194,7 +194,7 @@
 
                 async function loadUserPermissions() {
             try {
-                // Same-origin MVC action, so the auth cookie is enough and no Bearer token is needed.
+                // Same-origin MVC action, so the auth cookie is enough and no Bearer token is needed
                 const url = '/UserManagement/GetUserPermissions?id=@Model.Id';
 
                 $.ajax({

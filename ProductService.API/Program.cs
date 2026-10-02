@@ -91,7 +91,7 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Service-to-service calls send X-Api-Key, everyone else a JWT.
+// Service-to-service calls send X-Api-Key, everyone else a JWT
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = "JWT_OR_APIKEY";

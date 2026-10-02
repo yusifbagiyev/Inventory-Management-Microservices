@@ -154,7 +154,7 @@
     <script src="~/js/ajaxHandler.js" asp-append-version="true"></script>
     <script>
         $(document).ready(function() {
-            // Stops a double click from sending the update twice.
+            // Stops a double click from sending the update twice
             let isSubmitting = false;
 
             const $form = $('form');
@@ -181,7 +181,7 @@
                 onSuccess: function(response) {
                     console.log('Product update successful:', response);
 
-                    // Without the direct update permission the change goes to approval instead.
+                    // Without the direct update permission the change goes to approval instead
                     if (response.isApprovalRequest || response.approvalRequestId) {
                         showToast(
                             response.message || 'Product update submitted for approval',
@@ -202,12 +202,12 @@
                 onError: function(errorMessage, response) {
                     console.error('Product update error:', errorMessage);
 
-                    // Unlock so the form can be fixed and sent again.
+                    // Unlock so the form can be fixed and sent again
                     isSubmitting = false;
 
                     $submitBtn.prop('disabled', false).html(originalButtonHtml);
 
-                    // AjaxHandler shows the message itself.
+                    // AjaxHandler shows the message itself
                 }
             });
         });
@@ -226,7 +226,7 @@
                 };
                 reader.readAsDataURL(input.files[0]);
 
-                // A new file replaces the current image, so mark that one for removal.
+                // A new file replaces the current image, so mark that one for removal
                 if ($('#currentImageContainer').length) {
                     $('#currentImageContainer').hide();
                     $('#RemoveImage').val('true');

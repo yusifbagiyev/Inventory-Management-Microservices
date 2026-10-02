@@ -49,6 +49,7 @@ namespace InventoryManagement.Web.Extensions
             return services;
         }
 
+        /// <summary>Looks for the permission among the claims copied from the login result at sign-in.</summary>
         public static bool HasPermission(this ClaimsPrincipal user, string permission)
         {
             return user.Claims.Any(c => c.Type == "permission" && c.Value == permission);

@@ -81,6 +81,7 @@ namespace ProductService.Application.Features.Products.Commands
                 await _transactionService.ExecuteAsync(
                     async () =>
                     {
+                        // The event carries the product as it was before this update
                         var updateEvent = new ProductUpdatedEvent
                         {
                             Product = existingProduct,
@@ -117,14 +118,14 @@ namespace ProductService.Application.Features.Products.Commands
                     },
                     async () =>
                     {
-                        // Only the file this update uploaded. The product's current image stays.
+                        // Remove only the file this update uploaded and leave the product's current image
                         if (!string.IsNullOrEmpty(uploadedImageUrl))
                         {
                             await _imageService.DeleteImageAsync(uploadedImageUrl);
                         }
                     });
 
-                // The old image goes only after the new one is saved.
+                // The old image goes only after the new one is saved
                 if (uploadedImageUrl != null && !string.IsNullOrEmpty(oldImageUrl))
                 {
                     await _imageService.DeleteImageAsync(oldImageUrl);

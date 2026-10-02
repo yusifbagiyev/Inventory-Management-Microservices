@@ -12,6 +12,7 @@ using RabbitMQ.Client.Events;
 
 namespace ProductService.Infrastructure.Services
 {
+    /// <summary>Moves a product to its new department when RouteService completes a transfer.</summary>
     public class RabbitMQConsumer : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
@@ -120,7 +121,7 @@ namespace ProductService.Infrastructure.Services
 
             product.UpdateAfterRouting(transferEvent.ToDepartmentId, transferEvent.ToWorker);
 
-            // A transfer photo replaces the product's image.
+            // A transfer photo replaces the product's image
             if (transferEvent.ImageData != null && transferEvent.ImageData.Length > 0)
             {
                 if (!string.IsNullOrEmpty(product.ImageUrl))

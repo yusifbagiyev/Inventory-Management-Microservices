@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 
 namespace InventoryManagement.Web.Services
 {
+    /// <summary>Keeps the session's JWT fresh with the refresh token cookie.</summary>
     public class TokenManager : ITokenManager
     {
         private readonly IAuthService _authService;
@@ -48,7 +49,7 @@ namespace InventoryManagement.Web.Services
 
             var token = context.Session.GetString("JwtToken");
 
-            // The session can be lost while the auth cookie lives on, so restore the token from the refresh cookie.
+            // The session can be lost while the auth cookie lives on, so restore from the refresh cookie
             if (string.IsNullOrEmpty(token))
             {
                 _logger.LogInformation("No JWT token in session for authenticated user {User}, attempting restore",
@@ -95,7 +96,7 @@ namespace InventoryManagement.Web.Services
 
         public async Task<bool> RefreshTokenAsync()
         {
-            // The cooldown and the lock are static, so they apply across all users.
+            // The cooldown and the lock are static, so they apply across all users
             var timeSinceLastRefresh = DateTime.Now - _lastRefreshAttempt;
             if (timeSinceLastRefresh.TotalSeconds < REFRESH_COOLDOWN_SECONDS)
             {
@@ -125,7 +126,7 @@ namespace InventoryManagement.Web.Services
                     return false;
                 }
 
-                // Empty when the session was lost.
+                // Empty when the session was lost
                 var currentAccessToken = context.Session.GetString("JwtToken") ?? string.Empty;
 
                 _logger.LogInformation("Calling auth service to refresh JWT token...");
@@ -153,7 +154,7 @@ namespace InventoryManagement.Web.Services
                     }));
                 }
 
-                // Every refresh issues a new refresh token, so the cookie must be rewritten.
+                // Every refresh issues a new refresh token, so the cookie must be rewritten
                 var rememberMe = context.Request.Cookies["remember_me"] == "true";
                 var refreshCookieOptions = new CookieOptions
                 {
@@ -192,7 +193,7 @@ namespace InventoryManagement.Web.Services
                 var expiryTime = jwtToken.ValidTo.ToLocalTime();
                 var now = DateTime.Now;
 
-                // Refresh early, once less than 5 minutes are left.
+                // Refresh early, once less than 5 minutes are left
                 var bufferTime = TimeSpan.FromMinutes(5);
                 var expiresIn = expiryTime - now;
 
@@ -217,7 +218,7 @@ namespace InventoryManagement.Web.Services
             var context = _httpContextAccessor.HttpContext;
             if (context == null) return false;
 
-            // Only remember-me sessions can last long enough to hit the limit.
+            // Only remember-me sessions can last long enough to hit the limit
             var rememberMe = context.Request.Cookies["remember_me"] == "true";
             if (!rememberMe) return false;
 
@@ -249,7 +250,7 @@ namespace InventoryManagement.Web.Services
             context.Session.Remove("UserData");
             context.Session.Remove("LastActivity");
 
-            // Delete must use the same options the cookie was written with.
+            // Delete must use the same options the cookie was written with
             context.Response.Cookies.Delete("refresh_token", new CookieOptions
             {
                 HttpOnly = true,

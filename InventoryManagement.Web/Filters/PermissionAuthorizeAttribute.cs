@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace InventoryManagement.Web.Filters
 {
+    /// <summary>Lets the action run when the user holds either permission, usually an x and x.direct pair.</summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method ,AllowMultiple =true)]
     public class PermissionAuthorizeAttribute:Attribute,IAuthorizationFilter
     {

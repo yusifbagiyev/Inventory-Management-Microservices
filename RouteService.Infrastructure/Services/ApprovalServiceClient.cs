@@ -9,6 +9,7 @@ using SharedServices.DTOs;
 
 namespace RouteService.Infrastructure.Services
 {
+    /// <summary>Files approval requests with ApprovalService, through the gateway in production.</summary>
     public class ApprovalServiceClient : IApprovalService
     {
         private readonly HttpClient _httpClient;

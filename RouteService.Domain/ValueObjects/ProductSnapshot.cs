@@ -1,5 +1,6 @@
 ﻿namespace RouteService.Domain.ValueObjects
 {
+    /// <summary>The product's details as they were when the route was recorded.</summary>
     public class ProductSnapshot
     {
         public int ProductId { get; private set; }

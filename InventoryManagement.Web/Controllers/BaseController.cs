@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryManagement.Web.Controllers
 {
+    /// <summary>Shared error handling and AJAX responses for the signed-in pages.</summary>
     [Authorize]
     public abstract class BaseController : Controller
     {
@@ -28,7 +29,7 @@ namespace InventoryManagement.Web.Controllers
         {
             if (IsAjaxRequest())
             {
-                // A request sent for approval is not a success, but it isn't an error either.
+                // A request sent for approval is not a success, but it isn't an error either
                 if (!response.IsSuccess && !response.IsApprovalRequest)
                 {
                     Response.StatusCode = 400;
@@ -148,7 +149,7 @@ namespace InventoryManagement.Web.Controllers
                 using var doc = JsonDocument.Parse(responseContent);
                 var root = doc.RootElement;
 
-                // Our own errors, ProblemDetails and ModelState output each use a different field.
+                // Our own errors, ProblemDetails and ModelState output each use a different field
                 if (root.TryGetProperty("error", out var errorProp))
                     return errorProp.GetString() ?? defaultMessage;
 
@@ -180,7 +181,7 @@ namespace InventoryManagement.Web.Controllers
             }
             catch
             {
-                // Not JSON. A short plain-text body is fine to show, an HTML error page is not.
+                // Not JSON, so show a short plain-text body but never an HTML error page
                 if (responseContent.Length < 200 && !responseContent.Contains("<"))
                 {
                     return responseContent;

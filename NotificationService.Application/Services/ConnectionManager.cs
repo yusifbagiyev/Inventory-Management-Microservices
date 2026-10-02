@@ -1,5 +1,6 @@
 ﻿namespace NotificationService.Application.Services
 {
+    /// <summary>In-memory map of user ids to their open SignalR connections.</summary>
     public class ConnectionManager : IConnectionManager
     {
         private readonly Dictionary<string, HashSet<string>> _connections = new();

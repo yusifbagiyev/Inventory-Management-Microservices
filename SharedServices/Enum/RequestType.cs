@@ -1,5 +1,6 @@
 ﻿namespace SharedServices.Enum
 {
+    /// <summary>Request types match their permission names, except product.transfer which route.create gates.</summary>
     public static class RequestType
     {
         public const string CreateProduct = "product.create";

@@ -8,6 +8,7 @@ using System.Text.Json;
 
 namespace NotificationService.Infrastructure.Services
 {
+    /// <summary>Sends messages and photos to a WhatsApp group through Green API.</summary>
     public class WhatsAppService:IWhatsAppService
     {
         private readonly HttpClient _httpClient;
@@ -32,7 +33,7 @@ namespace NotificationService.Infrastructure.Services
         {
             try
             {
-                // Green API expects group chat ids to end in @g.us.
+                // Green API expects group chat ids to end in @g.us
                 if (!groupId.EndsWith("@g.us"))
                     groupId = $"{groupId}@g.us";
 
@@ -78,7 +79,7 @@ namespace NotificationService.Infrastructure.Services
                 var imageSizeInMB = imageData.Length / (1024.0 * 1024.0);
                 _logger.LogInformation($"Image size: {imageSizeInMB:F2} MB for file: {fileName}");
 
-                // Green API refuses files over about 10 MB, so send the text alone.
+                // Green API refuses files over about 10 MB, so send the text alone
                 if (imageSizeInMB > 10)
                 {
                     _logger.LogWarning($"Image size {imageSizeInMB:F2}MB exceeds limit. Sending text only.");

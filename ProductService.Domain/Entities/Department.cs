@@ -11,7 +11,7 @@
         public DateTime? UpdatedAt { get; private set; }
         public ICollection<Product> Products { get; private set; } = [];
 
-        // Only correct when Products is loaded.
+        // Only correct when Products is loaded
         public int WorkerCount => Products
             .Where(p=>!string.IsNullOrEmpty(p.Worker))
             .Select(p=>p.Worker)
@@ -35,6 +35,7 @@
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Department name cannot be empty", nameof(name));
 
+            // A blank description or head keeps the current value
             if(!string.IsNullOrWhiteSpace(description))
                 Description=description;
 

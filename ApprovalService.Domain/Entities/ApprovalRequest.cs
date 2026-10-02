@@ -2,6 +2,7 @@
 
 namespace ApprovalService.Domain.Entities
 {
+    /// <summary>A change waiting for an admin, with its action stored as JSON and run once approved.</summary>
     public class ApprovalRequest
     {
         public int Id { get;private set; }

@@ -3,6 +3,7 @@ using System.Text.Json;
 
 namespace InventoryManagement.Web.Middleware
 {
+    /// <summary>Last-resort handler that answers AJAX calls with JSON and sends pages to the error page.</summary>
     public class ExceptionHandlerMiddleware
     {
         private readonly RequestDelegate _next;

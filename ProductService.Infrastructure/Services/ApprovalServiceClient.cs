@@ -10,6 +10,7 @@ using SharedServices.DTOs;
 
 namespace ProductService.Infrastructure.Services
 {
+    /// <summary>Files approval requests with ApprovalService, passing on the caller's bearer token.</summary>
     public class ApprovalServiceClient : IApprovalService
     {
         private readonly HttpClient _httpClient;

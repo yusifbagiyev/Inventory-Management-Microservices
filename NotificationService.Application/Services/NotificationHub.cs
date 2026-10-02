@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace NotificationService.Application.Services
 {
+    /// <summary>SignalR hub that puts each connection in its user group and role groups.</summary>
     [Authorize]
     public class NotificationHub : Hub
     {
@@ -25,7 +26,7 @@ namespace NotificationService.Application.Services
             {
                 await _connectionManager.AddConnection(userId, Context.ConnectionId);
 
-                // NotificationSender reaches a user only through this group.
+                // NotificationSender reaches a user only through this group
                 var userGroup = $"user-{userId}";
                 await Groups.AddToGroupAsync(Context.ConnectionId, userGroup);
                 _logger.LogInformation($"User {userId} joined group {userGroup}");

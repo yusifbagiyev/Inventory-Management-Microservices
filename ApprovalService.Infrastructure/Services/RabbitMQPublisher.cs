@@ -7,6 +7,7 @@ using System.Text.Json;
 
 namespace ApprovalService.Infrastructure.Services
 {
+    /// <summary>Publishes persistent JSON messages to the inventory-events topic exchange.</summary>
     public class RabbitMQPublisher : IMessagePublisher, IDisposable
     {
         private IConnection _connection;

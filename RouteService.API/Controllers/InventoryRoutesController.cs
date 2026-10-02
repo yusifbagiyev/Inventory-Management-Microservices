@@ -237,6 +237,7 @@ namespace RouteService.API.Controllers
 
 
 
+        // The approved endpoints are called by ApprovalService with an admin token once a request is approved
         [HttpPost("transfer/approved")]
         [ApiExplorerSettings(IgnoreApi = true)]
         [Authorize(Roles = "Admin")]

@@ -69,7 +69,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials(); // SignalR needs credentials allowed.
+              .AllowCredentials(); // SignalR needs credentials allowed
     });
 });
 
@@ -99,7 +99,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnMessageReceived = context =>
             {
-                // WebSockets can't carry headers, so SignalR sends the token in the query string.
+                // WebSockets can't carry headers, so SignalR sends the token in the query string
                 var accessToken = context.Request.Query["access_token"];
                 var path = context.HttpContext.Request.Path;
                 if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/notificationHub"))

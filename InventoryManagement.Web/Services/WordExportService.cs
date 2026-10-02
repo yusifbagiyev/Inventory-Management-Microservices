@@ -9,11 +9,12 @@ using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
 
 namespace InventoryManagement.Web.Services
 {
+    /// <summary>Builds a department's signed handover list of equipment as a Word document.</summary>
     public class WordExportService : IWordExportService
     {
         private readonly IWebHostEnvironment _environment;
 
-        // Brand yellow, used for the title text and the table header.
+        // Brand yellow, used for the title text and the table header
         private const string BRAND_COLOR = "FFC000";
 
         public WordExportService(IWebHostEnvironment environment)
@@ -198,7 +199,7 @@ namespace InventoryManagement.Web.Services
 
             string relationshipId = mainPart.GetIdOfPart(imagePart);
 
-            // 9525 EMU is one pixel at 96 DPI.
+            // 9525 EMU is one pixel at 96 DPI
             long widthInEmus = widthInPixels * 9525L;
             long heightInEmus = heightInPixels * 9525L;
 
@@ -323,7 +324,7 @@ namespace InventoryManagement.Web.Services
                 table.Append(dataRow);
             }
 
-            // The total label spans the first three columns.
+            // The total label spans the first three columns
             var totalRow = new TableRow();
 
             var totalLabelCell = new TableCell();
@@ -392,7 +393,7 @@ namespace InventoryManagement.Web.Services
             var transferredPara = new Paragraph();
             var transferredParaProp = new ParagraphProperties();
             transferredParaProp.Append(new SpacingBetweenLines { Before = "120", After = "120" });
-            // KeepNext stops a page break from separating the two signature lines.
+            // KeepNext stops a page break from separating the two signature lines
             transferredParaProp.Append(new KeepNext());
             transferredPara.Append(transferredParaProp);
 
@@ -497,7 +498,7 @@ namespace InventoryManagement.Web.Services
                 runProp.Append(new Bold());
             }
 
-            // Highlight takes only named colours, so highlightColor is ignored and yellow is used.
+            // Highlight takes only named colours, so highlightColor is ignored and yellow is used
             runProp.Append(new Highlight { Val = HighlightColorValues.Yellow });
 
             run.Append(runProp);

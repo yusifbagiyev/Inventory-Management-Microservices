@@ -1,5 +1,6 @@
 ﻿namespace ApiGateway.Middleware
 {
+    /// <summary>Answers 504 when a request runs past the timeout.</summary>
     public class RequestTimeoutMiddleware
     {
         private readonly RequestDelegate _next;
@@ -21,7 +22,7 @@
             using var cts=new CancellationTokenSource(_timeout);
             var originalCancellationToken = context.RequestAborted;
 
-            // Cancel on whichever comes first, the timeout or the client going away.
+            // Cancel on whichever comes first, the timeout or the client going away
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                 cts.Token, originalCancellationToken);
 

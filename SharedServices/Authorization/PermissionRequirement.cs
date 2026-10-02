@@ -30,7 +30,7 @@ namespace SharedServices.Authorization
                 context.Succeed(requirement);
             }
 
-            // Admins pass every permission check.
+            // Admins pass every permission check
             else if (context.User.IsInRole("Admin"))
             {
                 context.Succeed(requirement);

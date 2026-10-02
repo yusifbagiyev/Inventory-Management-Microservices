@@ -3,6 +3,7 @@ using ProductService.Application.Interfaces;
 
 namespace ProductService.Application.Services
 {
+    /// <summary>Stores product photos on disk in one folder per inventory code.</summary>
     public class ImageService : IImageService
     {
         private readonly string _imagePath;

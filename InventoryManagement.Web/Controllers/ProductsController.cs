@@ -94,7 +94,7 @@ namespace InventoryManagement.Web.Controllers
             try
             {
                 var product = await _apiService.GetAsync<ProductViewModel>($"api/products/{id}");
-                // A deleted product comes back as null.
+                // A deleted product comes back as null
                 if (product == null)
                 {
                     return RedirectToAction("NotFound","Home");
@@ -151,6 +151,7 @@ namespace InventoryManagement.Web.Controllers
 
             try
             {
+                // The raw form goes along so the uploaded image reaches the API too
                 var form = HttpContext.Request.Form;
                 var response = await _apiService.PostFormAsync<dynamic>("api/products", form, dto);
 

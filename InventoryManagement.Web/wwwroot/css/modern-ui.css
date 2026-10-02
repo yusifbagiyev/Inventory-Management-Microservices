@@ -1,4 +1,5 @@
-﻿:root {
+﻿/* Layout shell shared by every page, with the sidebar, top bar and colour variables */
+:root {
     --primary-color: #667eea;
     --secondary-color: #764ba2;
     --success-color: #10b981;

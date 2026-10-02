@@ -47,7 +47,7 @@ namespace ApprovalService.Application.Features.Commands
                 await _repository.UpdateAsync(approvalRequest, cancellationToken);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                // The action runs as the approver, not as the requester.
+                // The action runs as the approver, not as the requester
                 try
                 {
                     var executed = await _actionExecutor.ExecuteAsync(

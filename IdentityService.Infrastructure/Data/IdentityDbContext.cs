@@ -82,7 +82,7 @@ namespace IdentityService.Infrastructure.Data
 
         private void SeedData(ModelBuilder builder)
         {
-            // Seed values must be constants, otherwise every new migration sees a model change.
+            // Seed values must be constants, otherwise every new migration sees a model change
             var user = new User
             {
                 Id = 1,
@@ -141,14 +141,13 @@ namespace IdentityService.Infrastructure.Data
 
             var rolePermissions = new List<RolePermission>();
 
-            // Admin gets every permission.
+            // Admin gets every permission
             for (int i = 1; i <= 15; i++)
             {
                 rolePermissions.Add(new RolePermission { RoleId = 1, PermissionId = i });
             }
 
-            // Operator was meant to get view plus the approval-request permissions.
-            // From id 8 on the ids are one too low, so it gets the permissions named below instead.
+            // Operator was meant to get view plus approval requests, but from id 8 on the ids are one too low
             rolePermissions.AddRange(new[]
             {
                 new RolePermission { RoleId = 2, PermissionId = 1 }, // RouteView
@@ -161,7 +160,7 @@ namespace IdentityService.Infrastructure.Data
                 new RolePermission { RoleId = 2, PermissionId = 13 }, // ProductUpdateDirect
             });
 
-            // User can only view.
+            // User can only view
             rolePermissions.AddRange(new[]
             {
                 new RolePermission { RoleId = 3, PermissionId = 1 }, // RouteView

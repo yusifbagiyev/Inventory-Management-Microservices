@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 
 namespace NotificationService.Infrastructure.Services
 {
+    /// <summary>Turns RabbitMQ inventory events into stored notifications, SignalR pushes and WhatsApp messages.</summary>
     public class RabbitMQConsumer : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
@@ -190,7 +191,7 @@ namespace NotificationService.Infrastructure.Services
 
                 await Task.WhenAll(tasks);
 
-                // Lets open approval pages reload their list.
+                // Lets open approval pages reload their list
                 await hubContext.Clients.Group("role-Admin").SendAsync("RefreshApprovals", new
                 {
                     requestId = approvalEvent.RequestId,
@@ -282,7 +283,7 @@ namespace NotificationService.Infrastructure.Services
 
                 foreach (var notification in notifications)
                 {
-                    // The request id may be stored under either key.
+                    // The request id may be stored under either key
                     if (notification.Data?.Contains($"\"approvalRequestId\":{cancelEvent.RequestId}") == true ||
                         notification.Data?.Contains($"\"RequestId\":{cancelEvent.RequestId}") == true)
                     {

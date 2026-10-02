@@ -240,7 +240,7 @@
         var colors = new[] { "#667eea", "#764ba2", "#f093fb", "#4facfe", "#43e97b", "#fa709a", "#30cfd0", "#c471ed" };
         if (string.IsNullOrEmpty(categoryName)) return colors[0];
 
-        // Own hash because string.GetHashCode changes between runs, so the colours would too.
+        // Own hash because string.GetHashCode changes between runs, so the colours would too
         var hash = 0;
         foreach (var c in categoryName)
             hash = unchecked(hash * 31 + c);

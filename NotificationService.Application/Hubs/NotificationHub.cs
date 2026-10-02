@@ -8,6 +8,7 @@ using NotificationService.Domain.Repositories;
 
 namespace NotificationService.Application.Hubs
 {
+    /// <summary>Hub variant that also replays unread notifications on connect, though Program maps the one in Services.</summary>
     [Authorize]
     public class NotificationHub : Hub
     {
@@ -29,7 +30,7 @@ namespace NotificationService.Application.Hubs
         {
             try
             {
-                // Tokens carry the id either as UserId or as NameIdentifier.
+                // Tokens carry the id either as UserId or as NameIdentifier
                 var userId = Context.User?.FindFirst("UserId")?.Value
                     ?? Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -68,7 +69,7 @@ namespace NotificationService.Application.Hubs
                         message = "Connected to notification service successfully"
                     });
 
-                    // Replay what arrived while the user was offline.
+                    // Replay what arrived while the user was offline
                     await SendPendingNotifications(userId);
                 }
                 else
@@ -139,7 +140,7 @@ namespace NotificationService.Application.Hubs
 
                     await Clients.Caller.SendAsync("ReceivePendingNotification", notificationDto);
 
-                    // A short pause so the client is not flooded.
+                    // A short pause so the client is not flooded
                     await Task.Delay(100);
                 }
 

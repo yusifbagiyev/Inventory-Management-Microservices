@@ -70,7 +70,7 @@ namespace IdentityService.Infrastructure.Services
 
             await _userManager.ResetAccessFailedCountAsync(user);
 
-            // Signing in ends the user's other sessions.
+            // Signing in ends the user's other sessions
             await RevokeAllUserRefreshTokensAsync(user.Id);
 
             return await GenerateTokenResponse(user);
@@ -102,7 +102,7 @@ namespace IdentityService.Infrastructure.Services
 
         public async Task<TokenDto> RefreshTokenAsync(RefreshTokenDto dto)
         {
-            // The refresh token alone proves who the user is. The access token is optional.
+            // The refresh token alone proves who the user is, so the access token is optional
             var refreshToken = await _tokenService.GetRefreshTokenAsync(dto.RefreshToken);
             if (refreshToken == null || !refreshToken.IsActive)
                 throw new UnauthorizedAccessException("Invalid refresh token");
@@ -122,11 +122,11 @@ namespace IdentityService.Infrastructure.Services
                 }
                 catch (Exception ex)
                 {
-                    // An unreadable access token is ignored, the refresh token is enough.
+                    // An unreadable access token is ignored since the refresh token is enough
                     _logger?.LogWarning(ex, "Access token validation failed during refresh, but continuing with valid refresh token");
                 }
 
-                // A readable token of another user is refused.
+                // A readable token of another user is refused
                 if (tokenUserId.HasValue && tokenUserId.Value != user.Id)
                     throw new UnauthorizedAccessException("Token user mismatch");
             }
@@ -138,7 +138,7 @@ namespace IdentityService.Infrastructure.Services
             var newAccessToken = await _tokenService.GenerateAccessToken(user);
             var newRefreshToken = await _tokenService.GenerateRefreshToken();
 
-            // Rotate the refresh token on every use.
+            // Rotate the refresh token on every use
             await _tokenService.RevokeRefreshTokenAsync(dto.RefreshToken, newRefreshToken);
             await _tokenService.CreateRefreshTokenAsync(user.Id, newRefreshToken);
 
@@ -275,7 +275,7 @@ namespace IdentityService.Infrastructure.Services
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
 
-            // A new password ends every existing session.
+            // A new password ends every existing session
             if (result.Succeeded)
             {
                 await RevokeAllUserRefreshTokensAsync(userId);
@@ -359,7 +359,7 @@ namespace IdentityService.Infrastructure.Services
 
         private async Task AssignRolePermissionsToUser(int userId, string roleName)
         {
-            // The role's permissions are copied onto the user as their own grants.
+            // The role's permissions are copied onto the user as their own grants
             var rolePermissions = await _context.RolePermissions
                 .Include(rp => rp.Permission)
                 .Where(rp => rp.Role.Name == roleName)
@@ -390,6 +390,7 @@ namespace IdentityService.Infrastructure.Services
 
             var userRoles = await _userManager.GetRolesAsync(user);
 
+            // Only role permissions are checked here, a user's direct grants are not
             var hasPermission = await _context.RolePermissions
                 .Include(rp => rp.Role)
                 .Include(rp => rp.Permission)

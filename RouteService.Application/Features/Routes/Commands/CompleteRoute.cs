@@ -43,7 +43,7 @@ namespace RouteService.Application.Features.Routes.Commands
                 await _repository.UpdateAsync(route, cancellationToken);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                // The photo goes as bytes because ProductService can't read this service's files.
+                // The photo goes as bytes because ProductService can't read this service's files
                 byte[]? imageData = null;
                 string? imageFileName = null;
                 

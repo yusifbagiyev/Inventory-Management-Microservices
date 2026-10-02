@@ -13,6 +13,7 @@ using NotificationService.Application.Interfaces;
 
 namespace NotificationService.Infrastructure.Services
 {
+    /// <summary>Reads users from IdentityService, signing its calls with a short-lived system token.</summary>
     public class UserService : IUserService
     {
         private readonly HttpClient _httpClient;
@@ -127,7 +128,7 @@ namespace NotificationService.Infrastructure.Services
                 Subject = new ClaimsIdentity(new[] {
                     new Claim(ClaimTypes.NameIdentifier, "0"),
                     new Claim(ClaimTypes.Name, "System"),
-                    new Claim(ClaimTypes.Role, "Admin"), // The user endpoints in IdentityService are admin-only.
+                    new Claim(ClaimTypes.Role, "Admin"), // The user endpoints in IdentityService are admin-only
                     new Claim(ClaimTypes.Role, "System")
                 }),
                 Expires = DateTime.Now.AddMinutes(5),

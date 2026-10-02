@@ -15,6 +15,7 @@ using System.Security.Claims;
 
 namespace ProductService.Application.Services
 {
+    /// <summary>Runs a product change directly for holders of the .direct permission, otherwise files it for approval.</summary>
     public class ProductManagementService : IProductManagementService
     {
         private readonly IMediator _mediator;
@@ -149,7 +150,7 @@ namespace ProductService.Application.Services
                 throw new InsufficientPermissionsException("You don't have permission to delete products");
             }
 
-            // Product details are stored so the request still reads well after the product is gone.
+            // Product details are stored so the request still reads well after the product is gone
             var approvalRequest = new CreateApprovalRequestDto
             {
                 RequestType = RequestType.DeleteProduct,
@@ -211,7 +212,7 @@ namespace ProductService.Application.Services
                 ["departmentId"] = dto.DepartmentId
             };
 
-            // The names are only for the approver to read. Execution uses the ids.
+            // The names are only for the approver to read since execution uses the ids
             try
             {
                 var category = await _mediator.Send(new GetCategoryByIdQuery(dto.CategoryId));

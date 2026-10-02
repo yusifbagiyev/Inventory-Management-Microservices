@@ -1,7 +1,8 @@
-﻿window.AjaxHandler = (function () {
+﻿// Submits forms over AJAX and answers with toasts, approval notices or inline field errors
+window.AjaxHandler = (function () {
     'use strict';
 
-    // One submitting flag per form, so a double click sends one request.
+    // One submitting flag per form, so a double click sends one request
     const submissionStates = new WeakMap();
     function handleForm(formSelector, options) {
         const defaults = {
@@ -33,10 +34,10 @@
                 submissionStates.set(formElement, { isSubmitting: false });
             }
 
-            // Calling handleForm twice on the same form must not stack handlers.
+            // Calling handleForm twice on the same form must not stack handlers
             $individualForm.off('submit.ajaxHandler');
 
-            // Only buttons that belong to this form, not to a form inside it.
+            // Only buttons that belong to this form, not to a form inside it
             const $submitBtnInThisForm = $individualForm.find('button[type="submit"]').filter(function () {
                 return $(this).closest('form')[0] === formElement;
             });
@@ -49,7 +50,7 @@
             const originalButtonHtml = $submitBtnInThisForm.html();
             const originalButtonDisabled = $submitBtnInThisForm.prop('disabled');
 
-            // Swallow clicks while a submit is still in flight.
+            // Swallow clicks while a submit is still in flight
             $submitBtnInThisForm.off('click.preventDouble');
             $submitBtnInThisForm.on('click.preventDouble', function (e) {
                 const formState = submissionStates.get(formElement);
@@ -75,7 +76,7 @@
                     return false;
                 }
 
-                // Lock before validating so a second click cannot slip in.
+                // Lock before validating so a second click cannot slip in
                 formState.isSubmitting = true;
                 const $currentSubmitBtn = $(form).find('button[type="submit"]').filter(function () {
                     return $(this).closest('form')[0] === form;
@@ -141,7 +142,7 @@
                         handleError(xhr, form, settings);
                     },
                     complete: function () {
-                        // Safety net in case a handler above threw before the button came back.
+                        // Safety net in case a handler above threw before the button came back
                         setTimeout(() => {
                             restoreButton();
                         }, 3000);
@@ -154,7 +155,7 @@
     }
 
     function handleSuccess(response, form, settings) {
-        // Check for an approval request before the error checks, which it could otherwise trip.
+        // Check for an approval request before the error checks, which it could otherwise trip
         if (isApprovalRequest(response)) {
             const message = response.message || 'Request submitted for approval';
             showToast(message, 'info');
@@ -274,11 +275,11 @@
     }
 
     function handleHtmlResponse(html, form, settings) {
-        // An HTML reply is the form rendered again by the server with its validation errors.
+        // An HTML reply is the form rendered again by the server with its validation errors
         const $container = $(form).closest('.card-body');
         if ($container.length) {
             $container.html(html);
-            // The swapped-in form has no submit handler yet.
+            // The swapped-in form has no submit handler yet
             const $newForm = $container.find('form');
             if ($newForm.length) {
                 const formId = $newForm.attr('id');

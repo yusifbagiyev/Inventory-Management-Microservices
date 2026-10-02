@@ -297,6 +297,7 @@
             restoreFilterValues();
         });
 
+        // The search box is applied on the server, so only status and sort run here
         function filterDepartments() {
             const statusFilter = $('#statusFilter').val();
             const sortBy = $('#sortBy').val();

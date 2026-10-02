@@ -303,7 +303,7 @@
                 params.append('search', searchTerm);
             }
 
-            // The picker shows MM/DD/YYYY but the URL carries ISO dates.
+            // The picker shows MM/DD/YYYY but the URL carries ISO dates
             const dateRange = $('#dateRange').val();
             if (dateRange) {
                 const dates = dateRange.split(' - ');
@@ -384,7 +384,7 @@
                             8000
                         );
 
-                        // Mark the row as pending and lock its buttons until the request is decided.
+                        // Mark the row as pending and lock its buttons until the request is decided
                         const $productRow = $(`tr:has(button[onclick="deleteProduct(${currentDeleteProductId})"])`);
                         if ($productRow.length) {
                             const $statusCell = $productRow.find('td:nth-child(5)'); // Status column
@@ -421,7 +421,7 @@
                             'error'
                         );
 
-                        // The modal stays open so the delete can be retried.
+                        // The modal stays open so the delete can be retried
                         $btn.prop('disabled', false).html(originalHtml);
                     }
                 },
@@ -570,7 +570,7 @@
         }
     </script>
     <script>
-        // Search as you type, submitting the form once typing pauses.
+        // Search as you type, submitting the form once typing pauses
         let searchTimeout;
         const searchInput = document.getElementById('searchInput');
         const searchForm = document.getElementById('searchForm');

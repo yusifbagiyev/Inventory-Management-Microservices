@@ -38,7 +38,7 @@ builder.Services.AddHttpClient("OcelotHttpClient")
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
         MaxConnectionsPerServer = 100,
-        // Accepts any certificate. Only safe for development.
+        // Accepts any certificate, which is only safe in development
         ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
     })
     .AddPolicyHandler(GetRetryPolicy())
@@ -91,7 +91,7 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
 
-    // Trust the Docker networks, where nginx sits in front of the gateway.
+    // Trust the Docker networks, where nginx sits in front of the gateway
     KnownNetworks =
     {
         new IPNetwork(IPAddress.Parse("172.18.0.0"), 16),
@@ -121,7 +121,7 @@ app.Use(async (context, next) =>
     Log.Debug("API Gateway received - X-Forwarded-For: {ForwardedFor}, X-Real-IP: {RealIp}, RemoteIP: {RemoteIp}",
         forwardedFor, realIp, remoteIp);
 
-    // Downstream services read the client IP from these headers, so fill them in when nginx did not.
+    // Downstream services read the client IP from these headers, so fill them in when nginx did not
     if (string.IsNullOrEmpty(forwardedFor) && !string.IsNullOrEmpty(remoteIp))
     {
         context.Request.Headers["X-Forwarded-For"] = remoteIp;

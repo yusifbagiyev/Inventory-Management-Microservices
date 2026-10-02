@@ -8,6 +8,7 @@ using System.Text;
 
 namespace InventoryManagement.Web.Services
 {
+    /// <summary>Gateway client that sends the session's JWT and retries once after a token refresh.</summary>
     public class ApiService:IApiService
     {
         private readonly HttpClient _httpClient;
@@ -16,7 +17,7 @@ namespace InventoryManagement.Web.Services
         private readonly ILogger<ApiService> _logger;
         private readonly ITokenManager _tokenManager;
 
-        // Flag in HttpContext.Items so one request refreshes the token at most once.
+        // Flag in HttpContext.Items so one request refreshes the token at most once
         private readonly string REQUEST_REFRESH_KEY = "TokenRefreshAttempted";
         public ApiService(
             HttpClient httpClient,
@@ -46,11 +47,11 @@ namespace InventoryManagement.Web.Services
 
             if (!string.IsNullOrEmpty(forwardedFor))
             {
-                // Nginx already started the chain, so pass it on as is.
+                // Nginx already started the chain, so pass it on as is
                 _httpClient.DefaultRequestHeaders.Remove("X-Forwarded-For");
                 _httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", forwardedFor);
 
-                // The first address in the chain is the real client.
+                // The first address in the chain is the real client
                 var realIp = forwardedFor.Split(',')[0].Trim();
                 _httpClient.DefaultRequestHeaders.Remove("X-Real-IP");
                 _httpClient.DefaultRequestHeaders.Add("X-Real-IP", realIp);
@@ -59,7 +60,7 @@ namespace InventoryManagement.Web.Services
             }
             else if (!string.IsNullOrEmpty(clientIp))
             {
-                // No proxy in front, so this app starts the chain.
+                // No proxy in front, so this app starts the chain
                 _httpClient.DefaultRequestHeaders.Remove("X-Forwarded-For");
                 _httpClient.DefaultRequestHeaders.Add("X-Forwarded-For", clientIp);
 
@@ -79,7 +80,7 @@ namespace InventoryManagement.Web.Services
             {
                 var context = _httpContextAccessor.HttpContext;
 
-                // Middleware puts the token in Items, the session is the fallback. JavaScript never supplies it.
+                // The token comes from Items or the session, never from page scripts
                 var token = context?.Items["JwtToken"] as string;
 
                 if (string.IsNullOrEmpty(token))
@@ -119,7 +120,7 @@ namespace InventoryManagement.Web.Services
 
             var response = await _httpClient.GetAsync(endpoint);
 
-            // On a 401 refresh the token once and retry.
+            // On a 401 refresh the token once and retry
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
                 var context = _httpContextAccessor.HttpContext;
@@ -229,7 +230,7 @@ namespace InventoryManagement.Web.Services
 
             if (response.IsSuccessStatusCode)
             {
-                // Some services answer an approval request with 200 instead of 202.
+                // Some services answer an approval request with 200 instead of 202
                 if (IsApprovalResponse(responseContent))
                 {
                     return HandleApprovalResponse<T>(responseContent);
@@ -538,6 +539,7 @@ namespace InventoryManagement.Web.Services
                 var properties = dataDto.GetType().GetProperties();
                 foreach (var prop in properties)
                 {
+                    // Files are added from form.Files below
                     if (prop.Name == "ImageFile") continue;
 
                     var value = prop.GetValue(dataDto)?.ToString() ?? "";
@@ -555,7 +557,7 @@ namespace InventoryManagement.Web.Services
                 }
             }
 
-            // Only form fields the DTO has not already sent.
+            // Only form fields the DTO has not already sent
             foreach(var field in form)
             {
                 if(field.Key=="ImageFile"||
@@ -607,6 +609,7 @@ namespace InventoryManagement.Web.Services
 
 
 
+        /// <summary>Spots an approval reply by its status or request id, in either casing.</summary>
         private bool IsApprovalResponse(string responseContent)
         {
             try

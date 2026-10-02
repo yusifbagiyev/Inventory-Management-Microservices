@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryManagement.Web.Controllers
 {
+    /// <summary>The approval requests a non-admin sent, where pending ones can still be cancelled.</summary>
     [Authorize(Roles = "User,Operator")]
     public class MyRequestsController : BaseController
     {
@@ -51,7 +52,7 @@ namespace InventoryManagement.Web.Controllers
                 if (request == null)
                     return RedirectToAction("NotFound", "Home", "?statusCode=404");
 
-                // This page only shows a user's own requests.
+                // This page only shows a user's own requests
                 if (request.RequestedById != GetCurrentUserId())
                 {
                     return Forbid();

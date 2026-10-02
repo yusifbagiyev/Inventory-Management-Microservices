@@ -3,6 +3,7 @@ using RouteService.Application.Interfaces;
 
 namespace RouteService.Application.Services
 {
+    /// <summary>Stores route photos on disk in one folder per inventory code.</summary>
     public class ImageService : IImageService
     {
         private readonly string _imagePath;

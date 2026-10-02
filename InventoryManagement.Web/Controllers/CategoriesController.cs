@@ -55,6 +55,7 @@ namespace InventoryManagement.Web.Controllers
                     var inActiveCategories = 0;
                     var categoriesInWithProducts = 0;
 
+                    // While searching, the counters only cover the matching page
                     if (!string.IsNullOrEmpty(search))
                     {
                         activeCategories = result.Items.Count(c => c.IsActive);
@@ -100,7 +101,7 @@ namespace InventoryManagement.Web.Controllers
                 if (category == null)
                     return RedirectToAction("NotFound", "Home", "?statusCode=404");
 
-                // One oversized page, because the details page lists every product of the category.
+                // One oversized page, because the details page lists every product of the category
                 var products = await _apiService.GetAsync<PagedResultDto<ProductViewModel>>(
                     $"api/products?pageSize=10000&pageNumber=1&categoryId={id}");
 

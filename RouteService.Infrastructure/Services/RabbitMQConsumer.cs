@@ -15,6 +15,7 @@ using RouteService.Domain.ValueObjects;
 
 namespace RouteService.Infrastructure.Services
 {
+    /// <summary>Writes a history route for each product created, updated or deleted in ProductService.</summary>
     public class RabbitMQConsumer : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
@@ -115,7 +116,7 @@ namespace RouteService.Infrastructure.Services
                 catch (FluentValidation.ValidationException ex)
                 {
                     _logger.LogError(ex, "Validation error - message will be discarded");
-                    // A message that fails validation would fail again, so it is dropped.
+                    // A message that fails validation would fail again, so it is dropped
                     _channel?.BasicNack(ea.DeliveryTag, false, false);
                 }
                 catch (Exception ex)
@@ -143,7 +144,7 @@ namespace RouteService.Infrastructure.Services
 
             string? imageUrl = null;
 
-            // The route keeps its own copy of the photo.
+            // The route keeps its own copy of the photo
             if (productCreatedEvent.ImageData != null && productCreatedEvent.ImageData.Length > 0)
             {
                 using var stream = new MemoryStream(productCreatedEvent.ImageData);
@@ -213,7 +214,7 @@ namespace RouteService.Infrastructure.Services
             var imageService = scope.ServiceProvider.GetRequiredService<IImageService>();
             var productClient = scope.ServiceProvider.GetRequiredService<IProductServiceClient>();
 
-            // The event carries the old values. The current ones come from ProductService.
+            // The event carries the old values, so the current ones are read from ProductService
             var product = await productClient.GetProductByIdAsync(receivedProduct.Product.Id);
             if (product == null) return;
 

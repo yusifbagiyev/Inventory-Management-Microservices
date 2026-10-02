@@ -1,4 +1,5 @@
-﻿window.NotificationManager = (function () {
+﻿// SignalR client behind live notifications, the bell count and the approvals list refresh
+window.NotificationManager = (function () {
     'use strict';
 
     let connection = null;
@@ -8,7 +9,7 @@
     let reconnectTimeout = null;
     let isInitialized = false;
 
-    // Recent ids are remembered for a few seconds so a repeated notification is dropped.
+    // Recent ids are remembered for a few seconds so a repeated notification is dropped
     const recentNotifications = new Map();
     const DUPLICATE_CHECK_WINDOW = 5000;
 
@@ -33,7 +34,7 @@
 
            console.log('Initializing notification system for ' + (isAdmin ? 'admin' : 'regular') + ' user');
 
-           // The token is fetched later, by the connection's accessTokenFactory.
+           // The token is fetched later, by the connection's accessTokenFactory
            establishConnection();
 
        } catch (error) {
@@ -62,7 +63,7 @@
             .withUrl(hubUrl, {
                 accessTokenFactory: async () => {
                     try {
-                        // The token lives only in memory. It is never written to the DOM.
+                        // The token lives only in memory and never touches the DOM
                         const token = await SecureTokenProvider.getToken();
 
                         if (!token) {
@@ -92,7 +93,7 @@
             .configureLogging(signalR.LogLevel.Warning)
             .build();
 
-        // Handlers must be registered before start, or the first server messages are lost.
+        // Handlers must be registered before start, or the first server messages are lost
         setupConnectionHandlers();
         setupMessageHandlers();
 
@@ -114,7 +115,7 @@
             console.log('SignalR reconnected successfully:', connectionId);
             showToast('Connection restored', 'success');
 
-            // Give the server a moment after a reconnect before reloading.
+            // Give the server a moment after a reconnect before reloading
             setTimeout(() => {
                 loadRecentNotifications();
                 loadNotificationCount();
@@ -129,7 +130,7 @@
             connectionState = 'disconnected';
             console.error('SignalR connection closed:', error);
 
-            // Automatic reconnect has given up by now, so retry by hand a few more times.
+            // Automatic reconnect has given up by now, so retry by hand a few more times
             if (connectionRetryCount < maxRetries) {
                 reconnectTimeout = setTimeout(() => {
                     console.log(`Attempting manual reconnection... (${connectionRetryCount + 1}/${maxRetries})`);
@@ -139,7 +140,7 @@
             } else {
                 console.error('Maximum reconnection attempts exceeded');
                 showToast('Unable to connect to notification service', 'error');
-                // Allow a fresh round of retries after a minute.
+                // Allow a fresh round of retries after a minute
                 setTimeout(() => {
                     connectionRetryCount = 0;
                 }, 60000);
@@ -155,7 +156,7 @@
             connectionState = 'connected';
             connectionRetryCount = 0;
 
-            // Kept on window for debugging from the console.
+            // Kept on window for debugging from the console
             window.notificationInfo = {
                 userId: data.userId,
                 userName: data.userName,
@@ -165,7 +166,7 @@
 
             console.log('Connected as:', data.userName, 'Groups:', [data.userGroup, ...data.roleGroups]);
 
-            // Short delay so the bell and its dropdown are on the page first.
+            // Short delay so the bell and its dropdown are on the page first
             setTimeout(() => {
                 loadRecentNotifications();
                 loadNotificationCount();
@@ -185,7 +186,7 @@
             handleIncomingNotification(notification);
         });
 
-        // Sent on connect for what arrived while offline. Only the badge changes, no toast for each.
+        // Sent on connect for what arrived while offline, so only the badge changes and no toasts show
         connection.on("ReceivePendingNotification", function (notification) {
             console.log('📬 Pending notification received:', notification);
 
@@ -205,7 +206,7 @@
             console.log('🔄 Refresh approvals signal received:', data);
 
             if (window.isAdmin) {
-                // admin-approvals.js may not be loaded on every page.
+                // admin-approvals.js may not be loaded on every page
                 if (typeof debouncedLoadPendingApprovalsCount === 'function') {
                     debouncedLoadPendingApprovalsCount();
                 } else if (typeof loadPendingApprovalsCount === 'function') {
@@ -256,7 +257,7 @@
 
         recentNotifications.set(notificationKey, now);
 
-        // Past 100 entries, keep only the 50 newest so the map does not grow forever.
+        // Past 100 entries, keep only the 50 newest so the map does not grow forever
         if (recentNotifications.size > 100) {
             const entries = Array.from(recentNotifications.entries());
             entries.sort((a, b) => b[1] - a[1]);
@@ -293,7 +294,7 @@
                 connectionState = 'disconnected';
                 console.error('❌ SignalR connection failed:', err);
 
-                // Retrying an auth error is pointless, the page has to be refreshed.
+                // Retrying an auth error is pointless, the page has to be refreshed
                 if (connectionRetryCount < maxRetries && !isAuthError(err)) {
                     connectionRetryCount++;
                     const delay = Math.min(1000 * Math.pow(2, connectionRetryCount), 10000);
@@ -331,7 +332,7 @@
 
         window.incrementNotificationCount();
 
-        // A burst of notifications reloads the dropdown list only once.
+        // A burst of notifications reloads the dropdown list only once
         clearTimeout(window.notificationListReloadTimeout);
         window.notificationListReloadTimeout = setTimeout(() => {
             window.loadRecentNotifications();
@@ -350,7 +351,7 @@
                 debouncedLoadPendingApprovalsCount();
             }
 
-            // Wait a bit so several requests arriving together refresh the table once.
+            // Wait a bit so several requests arriving together refresh the table once
             if (window.location.pathname.includes('/Approvals')) {
                 clearTimeout(window.approvalsRefreshTimeout);
                 window.approvalsRefreshTimeout = setTimeout(() => {
@@ -375,7 +376,7 @@
         if (table.length && $.fn.DataTable.isDataTable(table)) {
             showSubtleLoader();
 
-            // Fetch the page again and swap in only the stats cards and the table.
+            // Fetch the page again and swap in only the stats cards and the table
             $.ajax({
                 url: window.location.pathname,
                 type: 'GET',
@@ -396,14 +397,14 @@
                             pageLength: 25
                         });
 
-                        // Summaries are built by page script, which does not run on swapped-in HTML.
+                        // Summaries are built by page script, which does not run on swapped-in HTML
                         $('.request-summary').each(function () {
                             const $this = $(this);
                             const actionData = $this.data('action-data');
                             const requestType = $this.closest('tr').find('.badge').first().text().trim();
 
                             try {
-                                // getRequestSummary is defined on the Approvals page.
+                                // getRequestSummary is defined on the Approvals page
                                 const summary = getRequestSummary(requestType, actionData);
                                 $this.html(summary);
                             } catch (e) {
@@ -459,7 +460,7 @@
         });
     }
 
-    // At most one sound every 2 seconds.
+    // At most one sound every 2 seconds
     let lastSoundPlayed = 0;
     function shouldPlaySound() {
         const now = Date.now();

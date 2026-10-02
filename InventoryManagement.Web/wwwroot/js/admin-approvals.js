@@ -1,4 +1,5 @@
-﻿let isLoadingApprovals = false;
+﻿// Keeps the pending approval badges in the header and sidebar up to date
+let isLoadingApprovals = false;
 async function loadPendingApprovalsCount() {
     if (isLoadingApprovals) {
         console.log('Already loading approvals, skipping duplicate call');
@@ -10,7 +11,7 @@ async function loadPendingApprovalsCount() {
 
     setTimeout(async () => {
         try {
-            // The token comes from the provider, never from the DOM.
+            // The token comes from the provider, never from the DOM
             const token = await SecureTokenProvider.getToken();
 
             $.ajax({
@@ -53,7 +54,7 @@ async function loadPendingApprovalsCount() {
             console.error('Failed to get token:', error);
             isLoadingApprovals = false;
 
-            // A failed token fetch usually means the session has ended.
+            // A failed token fetch usually means the session has ended
             if (error.message.includes('Unauthorized')) {
                 window.location.href = '/Account/Login';
             }
@@ -84,11 +85,11 @@ function updatePendingApprovalsCount(count) {
 
     window.currentApprovalsCount = count;
 
-    // Other scripts on the page listen for this event.
+    // Other scripts on the page listen for this event
     $(document).trigger('approvals:count-updated', [count]);
 }
 
-// Use this one from handlers that can fire many times in a row.
+// Use this one from handlers that can fire many times in a row
 function debouncedLoadPendingApprovalsCount() {
     if (window.approvalsLoadTimeout) {
         clearTimeout(window.approvalsLoadTimeout);

@@ -31,7 +31,8 @@ try
 
     builder.Services.AddCustomAuthentication(builder.Configuration);
 
-    builder.Services.AddDistributedMemoryCache(); // Session storage
+    // Sessions, which hold the JWT, live in memory
+    builder.Services.AddDistributedMemoryCache();
     builder.Services.AddSession(options =>
     {
         options.IdleTimeout = TimeSpan.FromDays(7);
@@ -150,7 +151,8 @@ try
     app.UseMiddleware<ExceptionHandlerMiddleware>();
 
     app.UseAuthentication();
-      
+
+    // Needs the signed-in user from UseAuthentication
     app.UseMiddleware<JwtMiddleware>();
 
     app.UseAuthorization();

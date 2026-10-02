@@ -2,7 +2,7 @@
 {
     public static class AllPermissions
     {
-        // A plain permission goes through approval, the .direct one skips it.
+        // A plain permission goes through approval, the .direct one skips it
         public const string RouteView = "route.view";
         public const string RouteCreate = "route.create";
         public const string RouteCreateDirect = "route.create.direct";

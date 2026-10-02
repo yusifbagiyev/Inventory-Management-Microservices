@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryManagement.Web.Controllers
 {
+    /// <summary>Dashboard whose figures are worked out here from the full product and transfer lists.</summary>
     [Authorize]
     public class HomeController : BaseController
     {
@@ -45,7 +46,7 @@ namespace InventoryManagement.Web.Controllers
 
                 var now = DateTime.Now;
                 DateTime startDate;
-                DateTime endDate = now.Date.AddDays(1).AddSeconds(-1); // End of today
+                DateTime endDate = now.Date.AddDays(1).AddSeconds(-1);
 
                 switch (period.ToLower())
                 {
@@ -66,7 +67,7 @@ namespace InventoryManagement.Web.Controllers
                         period = "last7days";
                         break;
                 }
-                // The figures are computed here from complete lists, hence the huge page sizes.
+                // The figures are computed here from complete lists, hence the huge page sizes
                 var allProductsTask = _apiService.GetAsync<PagedResultDto<ProductViewModel>>(
                     "api/products?pageSize=10000&pageNumber=1");
 
@@ -85,7 +86,7 @@ namespace InventoryManagement.Web.Controllers
                 var departments = await departmentsTask;
                 var categoriesResult = await categoriesTask;
 
-                // Most figures count transfers made in the period, not products created in it.
+                // Most figures count transfers made in the period, not products created in it
                 var routesInPeriod = FilterRoutesByPeriod(allRoutes, startDate, endDate);
 
                 ProcessProductMetrics(model, allProducts, startDate, endDate, period);
@@ -125,7 +126,7 @@ namespace InventoryManagement.Web.Controllers
             if (allRoutes?.Items == null)
                 return new List<RouteViewModel>();
 
-            // Compare dates only, so a transfer made late on the last day still counts.
+            // Compare dates only, so a transfer made late on the last day still counts
             return allRoutes.Items
                 .Where(r => (r.RouteTypeName == "Transfer" || r.RouteType == "Transfer") &&
                            r.CreatedAt.Date >= startDate.Date &&
@@ -256,7 +257,7 @@ namespace InventoryManagement.Web.Controllers
                     .Distinct()
                     .ToHashSet();
 
-                // Only the worker on this department's side of each transfer counts.
+                // Only the worker on this department's side of each transfer counts
                 var uniqueWorkers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var route in deptRoutes.Where(r => r.ToDepartmentId == dept.Id))
@@ -304,7 +305,7 @@ namespace InventoryManagement.Web.Controllers
             var categories = categoriesResult.Items.Where(c => c.IsActive).ToList();
             var products = allProducts.Items.ToList();
 
-            // Neighbouring colours are far apart so chart slices stay easy to tell apart.
+            // Neighbouring colours are far apart so chart slices stay easy to tell apart
             var professionalColors = new[]
             {
                 "#FF6B6B", // Coral red
@@ -366,7 +367,7 @@ namespace InventoryManagement.Web.Controllers
 
 
 
-        /// <summary>Chart buckets are days for 7 days, weeks for 30 days, months for 6 months and quarters for all time.</summary>
+        /// <summary>Buckets the chart by day, week, month or quarter, depending on the period.</summary>
         private void ProcessTransferActivity(
             DashboardViewModel model,
             List<RouteViewModel> routesInPeriod,
@@ -424,7 +425,7 @@ namespace InventoryManagement.Web.Controllers
                         currentWeekStart = currentWeekStart.AddDays(7); // Not weekEnd, which is clamped and would loop forever
                         weekNumber++;
 
-                        // Guard against an endless loop.
+                        // Guard against an endless loop
                         if (weekNumber > 10) break;
                     }
                     break;

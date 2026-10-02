@@ -78,7 +78,7 @@ namespace RouteService.Application.Features.Routes.Commands
                         imageUrl = await _imageService.UploadImageAsync(ms, dto.ImageFile.FileName, product.InventoryCode);
                     }
 
-                    // The route keeps the product as it was at transfer time.
+                    // The route keeps the product as it was at transfer time
                     var productSnapshot = new ProductSnapshot(
                         product.Id,
                         product.InventoryCode,

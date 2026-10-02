@@ -95,6 +95,7 @@ namespace InventoryManagement.Web.Services
 
             var allRequests = await GetAllRequestsAsync();
 
+            // An approved request is stored as Executed once its action has run
             return new ApprovalStatisticsDto
             {
                 TotalPending = allRequests.Count(r => r.Status == "Pending"),

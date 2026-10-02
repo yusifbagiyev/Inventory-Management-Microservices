@@ -7,6 +7,7 @@ using RouteService.Application.Interfaces;
 
 namespace RouteService.Infrastructure.Services
 {
+    /// <summary>Publishes persistent JSON messages to the inventory-events topic exchange.</summary>
     public class RabbitMQPublisher : IMessagePublisher, IDisposable
     {
         private readonly IConnection _connection;

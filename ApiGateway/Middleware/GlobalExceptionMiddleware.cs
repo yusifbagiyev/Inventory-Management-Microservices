@@ -4,6 +4,7 @@ using System.Text.Json;
 
 namespace ApiGateway.Middleware
 {
+    /// <summary>Logs slow or failed requests and answers exceptions with a JSON error carrying the correlation id.</summary>
     public class GlobalExceptionMiddleware
     {
         private readonly RequestDelegate _next;
@@ -33,7 +34,7 @@ namespace ApiGateway.Middleware
 
                 stopwatch.Stop();
 
-                // Log only slow or failed requests to keep Seq quiet.
+                // Log only slow or failed requests to keep Seq quiet
                 if (stopwatch.ElapsedMilliseconds > 1000 || context.Response.StatusCode >= 400)
                 {
                     _logger.LogInformation(
@@ -76,7 +77,7 @@ namespace ApiGateway.Middleware
             {
                 stopwatch.Stop();
 
-                // A downstream service is down or unreachable.
+                // A downstream service is down or unreachable
                 _logger.LogError(ex,
                     "Downstream service error: {Method} {Path} | Duration: {Duration}ms | CorrelationId: {CorrelationId} | Message: {Message}",
                     context.Request.Method,

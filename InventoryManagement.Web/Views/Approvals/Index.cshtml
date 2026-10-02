@@ -204,6 +204,7 @@
             try {
                 const data = typeof actionData === 'string' ? JSON.parse(actionData) : actionData;
 
+                // Cases match the badge text, which this table and the details partial word differently
                 switch(requestType) {
                     case 'Create Product':
                     case 'Creating Product':

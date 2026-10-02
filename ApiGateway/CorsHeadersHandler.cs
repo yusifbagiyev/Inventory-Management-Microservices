@@ -1,6 +1,7 @@
 ﻿
 namespace ApiGateway
 {
+    /// <summary>Adds CORS headers to downstream responses that come back without them.</summary>
     public class CorsHeadersHandler:DelegatingHandler
     {
         protected override async Task<HttpResponseMessage> SendAsync(

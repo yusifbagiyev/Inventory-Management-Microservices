@@ -159,7 +159,7 @@
     <script src="~/js/ajaxHandler.js" asp-append-version="true"></script>
     <script>
         $(document).ready(function() {
-            // Stops a double click from creating the same product twice.
+            // Stops a double click from creating the same product twice
             let isSubmitting = false;
 
             const $submitBtn = $('button[type="submit"]');
@@ -183,7 +183,7 @@
                 },
 
                 onSuccess: function(response) {
-                    // Without the direct create permission the product goes to approval instead.
+                    // Without the direct create permission the product goes to approval instead
                     if (response.isApprovalRequest || response.approvalRequestId) {
                         showToast(
                             response.message || 'Product creation submitted for approval',
@@ -202,13 +202,13 @@
                 },
 
                 onError: function(errorMessage, response) {
-                    // Unlock so the form can be fixed and sent again.
+                    // Unlock so the form can be fixed and sent again
                     isSubmitting = false;
 
                     $submitBtn.prop('disabled', false).html(originalButtonHtml);
 
                     console.error('Product creation error:', errorMessage);
-                    // AjaxHandler shows the message itself.
+                    // AjaxHandler shows the message itself
                 }
             });
         });

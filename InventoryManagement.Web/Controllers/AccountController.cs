@@ -8,6 +8,7 @@ using System.Security.Claims;
 
 namespace InventoryManagement.Web.Controllers
 {
+    /// <summary>Cookie sign-in backed by the identity API, with the JWT kept in the server session.</summary>
     public class AccountController : Controller
     {
         private readonly IAuthService _authService;
@@ -38,7 +39,7 @@ namespace InventoryManagement.Web.Controllers
                     return RedirectToAction("Index", "Home");
                 }
 
-                // The cookie outlived the JWT, so sign out fully before showing the form.
+                // The cookie outlived the JWT, so sign out fully before showing the form
                 await CleanupAuthenticationAsync();
             }
 
@@ -61,7 +62,7 @@ namespace InventoryManagement.Web.Controllers
                     var result = await _authService.LoginAsync(model.Username, model.Password, model.RememberMe);
                     if (result != null && !string.IsNullOrEmpty(result.AccessToken))
                     {
-                        // The access token stays in the server-side session and never reaches the browser.
+                        // The access token stays in the server-side session and never reaches the browser
                         HttpContext.Session.SetString("JwtToken", result.AccessToken);
 
                         HttpContext.Session.SetString("UserData", JsonConvert.SerializeObject(new
@@ -75,7 +76,7 @@ namespace InventoryManagement.Web.Controllers
 
                         var rememberMe = result.RememberMe ?? model.RememberMe;
 
-                        // HttpOnly so page scripts can't read the refresh token.
+                        // HttpOnly so page scripts can't read the refresh token
                         var refreshCookieOptions = new CookieOptions
                         {
                             HttpOnly = true,
@@ -259,7 +260,7 @@ namespace InventoryManagement.Web.Controllers
                     }));
                     HttpContext.Session.SetString("LastActivity", DateTime.Now.ToString("o"));
 
-                    // The API rotates refresh tokens, so the old one is already dead.
+                    // The API rotates refresh tokens, so the old one is already dead
                     var rememberMe = Request.Cookies["remember_me"] == "true";
                     var refreshCookieOptions = new CookieOptions
                     {

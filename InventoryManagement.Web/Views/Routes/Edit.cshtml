@@ -186,11 +186,11 @@
 @section Scripts {
     <script src="~/js/ajaxHandler.js" asp-append-version="true"></script>
     <script>
-        // Page code stays in this closure. Only what inline onclick handlers call is put on window.
+        // Page code stays in this closure and only what inline onclick handlers call goes on window
         (function() {
             'use strict';
 
-            // Shared by save and delete so only one request runs at a time.
+            // Shared by save and delete so only one request runs at a time
             let isSubmitting = false;
             let routeId = @Model.Id;
 
@@ -211,7 +211,7 @@
                 const $submitBtn = $('#submitBtn');
                 const originalButtonHtml = $submitBtn.html();
 
-                // Drop any handlers bound earlier so the form never submits twice.
+                // Drop any handlers bound earlier so the form never submits twice
                 $form.off('submit');
                 $form.off('submit.ajaxHandler');
                 $submitBtn.off('click');

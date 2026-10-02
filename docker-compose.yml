@@ -67,7 +67,7 @@ services:
       context: ./src
       dockerfile: ProductService.API/Dockerfile
     container_name: inventory_product_service
-    # Root, so it can write to the bind-mounted image folder.
+    # Runs as root so it can write to the bind-mounted image folder
     user: "root"
     environment:
       - TZ=${TZ:-UTC}
@@ -98,7 +98,7 @@ services:
       context: ./src
       dockerfile: RouteService.API/Dockerfile
     container_name: inventory_route_service
-    # Root, so it can write to the bind-mounted image folder.
+    # Runs as root so it can write to the bind-mounted image folder
     user: "root"
     environment:
       - TZ=${TZ:-UTC}
@@ -141,7 +141,7 @@ services:
       - Jwt__Key=${JWT_SECRET_KEY}
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=${JWT_AUDIENCE}
-      # Approved actions are run through the gateway, not by calling the services directly.
+      # Approved actions are run through the gateway, not by calling the services directly
       - Services__ProductService=http://api-gateway
       - Services__RouteService=http://api-gateway
     depends_on:

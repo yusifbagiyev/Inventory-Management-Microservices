@@ -4,7 +4,7 @@
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // Alerts close after 5 seconds unless marked alert-permanent.
+    // Alerts close after 5 seconds unless marked alert-permanent
     setTimeout(function () {
         const alerts = document.querySelectorAll('.alert:not(.alert-permanent):not(#productInfo):not(#errorInfo)');
         alerts.forEach(function (alert) {
@@ -13,7 +13,7 @@
         });
     }, 5000);
 
-    // Add the no-spinner class to opt a form out.
+    // Add the no-spinner class to opt a form out
     const forms = document.querySelectorAll('form:not(.no-spinner)');
     forms.forEach(function (form) {
         form.addEventListener('submit', function () {
@@ -59,7 +59,7 @@ function showToast(message, type = 'info', duration = 5000) {
         type = 'info';
     }
 
-    // Bootstrap has no "error" colour, callers mean danger.
+    // Bootstrap has no error colour, so callers asking for one get danger
     if (type === 'error') {
         type = 'danger';
     }
@@ -116,7 +116,7 @@ function getToastIcon(type) {
 }
 
 
-// Wrap any API or user text with this before putting it into HTML.
+// Wrap any API or user text with this before putting it into HTML
 function escapeHtml(unsafe) {
     return unsafe.replace(/&/g, "&amp;")
                  .replace(/</g, "&lt;")
@@ -126,7 +126,7 @@ function escapeHtml(unsafe) {
 }
 
 
-// Undoes the submit spinner, for forms whose submit was cancelled or failed.
+// Undoes the submit spinner, for forms whose submit was cancelled or failed
 function resetFormState(fromElement){
     const submitButtons = fromElement.querySelectorAll('button[type="submit"]');
 
@@ -136,7 +136,7 @@ function resetFormState(fromElement){
         if (button.dataset.originalText) {
             button.innerHTML = button.dataset.originalText;
         } else {
-            // Without a saved label the best guess is a plain Submit.
+            // Without a saved label the best guess is a plain Submit
             const spinner = button.querySelector('.spinner-border');
             if (spinner) {
                 spinner.remove();
@@ -157,6 +157,7 @@ function hideLoader() {
     $('.loader-overlay').remove();
 }
 
+// Every five minutes, sends the user to sign in once the session has no API token left
 function setupSessionMonitor() {
     const isUserAuthenticated = document.querySelector('.user-menu-toggle') !== null;
 

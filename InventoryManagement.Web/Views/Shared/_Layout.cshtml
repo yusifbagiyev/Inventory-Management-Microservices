@@ -221,7 +221,7 @@
             });
         }
 
-        // These are on window because notification-manager.js calls them.
+        // These are on window because notification-manager.js calls them
         window.loadNotificationCount = function() {
             $.ajax({
                 url: '/Notifications/GetUnreadCount',
@@ -269,7 +269,7 @@
         };
 
         window.loadPendingApprovalsCountFromAPI = function() {
-         // admin-approvals.js is loaded only for Admins.
+         // admin-approvals.js is loaded only for Admins
             if (typeof loadPendingApprovalsCount === 'function') {
             loadPendingApprovalsCount();
             }
@@ -284,7 +284,7 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('Failed to get current count:', error);
-                    // The count request failed, so bump the number already shown.
+                    // The count request failed, so bump the number already shown
                     const $badge = $('#notificationBadge');
                     const currentText = $badge.text().trim();
 
@@ -413,7 +413,7 @@
 
                     $('.nav-link[href="/Notifications"] .badge').text('0').hide();
 
-                    // Re-read list and count from the server so the badges match what was saved.
+                    // Re-read list and count from the server so the badges match what was saved
                     setTimeout(function() {
                         loadRecentNotifications();
                         loadNotificationCount();
@@ -432,7 +432,7 @@
             count = parseInt(count) || 0;
             console.log('Updating notification badges to:', count);
 
-            // The unread count shows in several places depending on the page.
+            // The unread count shows in several places depending on the page
             const badgeSelectors = [
                 '#notificationBadge',
                 '#sidebarUnreadCount',
@@ -448,7 +448,7 @@
                         const displayCount = count > 99 ? '99+' : count;
                         $element.text(displayCount).show();
 
-                        // Badges need inline-flex, not the default display that show() gives.
+                        // Badges need inline-flex, not the default display that show() gives
                         if ($element.hasClass('badge')) {
                             $element.css('display', 'inline-flex');
                         }

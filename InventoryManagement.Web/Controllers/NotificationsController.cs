@@ -95,6 +95,7 @@ namespace InventoryManagement.Web.Controllers
             }
             catch (Exception ex)
             {
+                // The badge is on every page, so a failure just shows zero
                 _logger?.LogError(ex, "Failed to get unread notification count");
                 return Json(0);
             }

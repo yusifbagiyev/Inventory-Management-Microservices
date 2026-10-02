@@ -6,6 +6,7 @@ using SharedServices.Exceptions;
 
 namespace ProductService.API.Middleware
 {
+    /// <summary>Maps exceptions to a status code and a JSON ErrorResponse.</summary>
     public class ErrorHandlingMiddleware
     {
         private readonly RequestDelegate _next;

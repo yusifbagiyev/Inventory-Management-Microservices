@@ -7,6 +7,7 @@ using RabbitMQ.Client;
 
 namespace ProductService.Infrastructure.Services
 {
+    /// <summary>Publishes persistent JSON messages to the inventory-events topic exchange.</summary>
     public class RabbitMQPublisher : IMessagePublisher, IDisposable
     {
         private readonly IConnection _connection;

@@ -5,7 +5,7 @@ using NotificationService.Application.Interfaces;
 
 namespace NotificationService.API.Controllers
 {
-    /// <summary>Manual checks of the WhatsApp setup. Not meant for production.</summary>
+    /// <summary>Manual checks of the WhatsApp setup, not meant for production use.</summary>
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = "Admin")]

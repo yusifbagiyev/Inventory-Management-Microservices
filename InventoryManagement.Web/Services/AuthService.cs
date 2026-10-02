@@ -41,13 +41,13 @@ namespace InventoryManagement.Web.Services
                 var json = JsonConvert.SerializeObject(loginDto);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                // Headers go on this message, not on the shared client.
+                // Headers go on this message, not on the shared client
                 var request = new HttpRequestMessage(HttpMethod.Post, "api/auth/login")
                 {
                     Content = content
                 };
 
-                // Pass the real client IP on to the identity service.
+                // Pass the real client IP on to the identity service
                 if (!string.IsNullOrEmpty(forwardedFor))
                 {
                     request.Headers.Add("X-Forwarded-For", forwardedFor);
@@ -71,7 +71,7 @@ namespace InventoryManagement.Web.Services
 
                     if (result != null)
                     {
-                        // Remember me comes from the login form, not from the API.
+                        // Remember me comes from the login form, not from the API
                         result.RememberMe = rememberMe;
                         _logger.LogInformation("Login successful for user: {Username}", username);
                     }
@@ -104,7 +104,7 @@ namespace InventoryManagement.Web.Services
                 var json = JsonConvert.SerializeObject(refreshDto);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                // The refresh call goes without the expired bearer token.
+                // The refresh call goes without the expired bearer token
                 _httpClient.DefaultRequestHeaders.Authorization = null;
 
                 var response = await _httpClient.PostAsync("api/auth/refresh", content);

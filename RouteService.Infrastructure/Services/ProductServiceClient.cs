@@ -11,6 +11,7 @@ using RouteService.Application.Interfaces;
 
 namespace RouteService.Infrastructure.Services
 {
+    /// <summary>Reads products and departments from ProductService with a short-lived system admin token.</summary>
     public class ProductServiceClient : IProductServiceClient
     {
         private readonly HttpClient _httpClient;

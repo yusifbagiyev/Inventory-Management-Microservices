@@ -48,7 +48,7 @@ namespace InventoryManagement.Web.Services
             }
             catch (Exception ex)
             {
-                // A failed load shows an empty list instead of breaking the page.
+                // A failed load shows an empty list instead of breaking the page
                 Console.WriteLine($"Failed to get notifications: {ex.Message}");
                 return new List<NotificationDto>();
             }

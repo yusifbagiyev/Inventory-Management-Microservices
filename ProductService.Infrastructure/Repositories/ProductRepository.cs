@@ -61,6 +61,7 @@ namespace ProductService.Infrastructure.Repositories
 
             if (endDate.HasValue)
             {
+                // Include the whole end day
                 var EndDate = endDate.Value.AddDays(1).AddTicks(-1);
                 query = query.Where(r => r.CreatedAt <= EndDate);
             }
@@ -72,7 +73,7 @@ namespace ProductService.Infrastructure.Repositories
             {
                 search = search.Trim();
 
-                // ILIKE narrows the rows in SQL but misses Azerbaijani letter variants.
+                // ILIKE narrows the rows in SQL but misses Azerbaijani letter variants
                 var broadQuery = query.Where(r =>
                     EF.Functions.ILike(r.InventoryCode.ToString(), $"%{search}%") ||
                     EF.Functions.ILike(r.Vendor, $"%{search}%") ||
@@ -88,7 +89,7 @@ namespace ProductService.Infrastructure.Repositories
                     .ThenByDescending(r => r.UpdatedAt)
                     .ToListAsync(cancellationToken);
 
-                // The Azerbaijani-aware match runs in memory, so paging has to follow it there.
+                // The Azerbaijani-aware match runs in memory, so paging has to follow it there
                 items = allFilteredItems.Where(r =>
                     SearchHelper.ContainsAzerbaijani(r.InventoryCode.ToString(), search) ||
                     SearchHelper.ContainsAzerbaijani(r.Vendor, search) ||

@@ -7,6 +7,7 @@ using NotificationService.Domain.Repositories;
 
 namespace NotificationService.Application.Services
 {
+    /// <summary>Stores a notification for each recipient and pushes it to their SignalR group.</summary>
     public class NotificationSender:INotificationSender
     {
         private readonly IHubContext<NotificationHub> _hubContext;
@@ -72,7 +73,7 @@ namespace NotificationService.Application.Services
 
             await _hubContext.Clients.Group($"role-{role}").SendAsync("ReceiveNotification", new
             {
-                Id = 0, // Each user has their own stored row, so the broadcast has no single id.
+                Id = 0, // Each user has their own stored row, so the broadcast has no single id
                 Type = type,
                 Title = title,
                 Message = message,

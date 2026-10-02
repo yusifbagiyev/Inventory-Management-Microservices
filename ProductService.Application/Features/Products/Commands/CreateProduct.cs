@@ -103,7 +103,7 @@ namespace ProductService.Application.Features.Products.Commands
                         ImageFileName= null
                     };
 
-                    // Consumers get the bytes so they don't have to fetch the file from this service.
+                    // Consumers get the bytes so they don't have to fetch the file from this service
                     if(dto.ImageFile != null && dto.ImageFile.Length > 0)
                     {
                         using var ms= new MemoryStream();
@@ -118,7 +118,7 @@ namespace ProductService.Application.Features.Products.Commands
                 },
                 async () =>
                 {
-                    // Don't leave an orphaned file behind when the insert fails.
+                    // Don't leave an orphaned file behind when the insert fails
                     if (!string.IsNullOrEmpty(imageUrl))
                     {
                         await _imageService.DeleteImageAsync(imageUrl);

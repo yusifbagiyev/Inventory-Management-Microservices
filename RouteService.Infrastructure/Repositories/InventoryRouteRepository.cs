@@ -96,6 +96,7 @@ namespace RouteService.Infrastructure.Repositories
 
             if (endDate.HasValue)
             {
+                // Include the whole end day
                 var EndDate = endDate.Value.AddDays(1).AddTicks(-1);
                 query = query.Where(r => r.CreatedAt <= EndDate);
             }
@@ -107,7 +108,7 @@ namespace RouteService.Infrastructure.Repositories
             {
                 search = search.Trim();
 
-                // ILIKE narrows the rows in SQL but misses Azerbaijani letter variants.
+                // ILIKE narrows the rows in SQL but misses Azerbaijani letter variants
                 var broadQuery = query.Where(r =>
                     EF.Functions.ILike(r.ProductSnapshot.InventoryCode.ToString(), $"%{search}%") ||
                     EF.Functions.ILike(r.ProductSnapshot.CategoryName, $"%{search}%") ||

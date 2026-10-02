@@ -30,6 +30,7 @@
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Category name cannot be empty", nameof(name));
 
+            // A blank description keeps the current one
             if (!string.IsNullOrWhiteSpace(description))
                 Description = description;
             Name = name;

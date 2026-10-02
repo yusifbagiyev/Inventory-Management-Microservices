@@ -42,6 +42,7 @@ namespace ProductService.Infrastructure.Repositories
             if (!string.IsNullOrEmpty(search))
             {
                 search = search.Trim();
+                // ILIKE narrows the rows in SQL, then the Azerbaijani-aware match and paging run in memory
                 var broadQuery = query.Where(r =>
                     EF.Functions.ILike(r.Name, $"%{search}%") ||
                     EF.Functions.ILike(r.Description, $"%{search}%")

@@ -1,4 +1,5 @@
-﻿window.AppConfig = (function () {
+﻿// API, SignalR and image addresses, local ports in development and same-origin paths in production
+window.AppConfig = (function () {
     'use strict';
 
     const hostname = window.location.hostname;

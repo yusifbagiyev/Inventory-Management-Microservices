@@ -12,6 +12,7 @@ using System.Security.Claims;
 
 namespace RouteService.Application.Services
 {
+    /// <summary>Runs a route change directly for holders of the .direct permission, otherwise files it for approval.</summary>
     public class RouteManagementService : IRouteManagementService
     {
         private readonly IMediator _mediator;

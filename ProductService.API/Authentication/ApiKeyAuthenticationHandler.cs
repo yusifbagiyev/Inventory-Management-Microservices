@@ -5,6 +5,7 @@ using System.Text.Encodings.Web;
 
 namespace ProductService.API.Authentication
 {
+    /// <summary>Signs in internal services by their X-Api-Key with the permissions configured for that key.</summary>
     public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
     {
         private const string ApiKeyHeaderName = "X-Api-Key";
@@ -22,7 +23,7 @@ namespace ProductService.API.Authentication
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            // No header means this is not an API key call, let the other schemes try.
+            // Without the header this is not an API key call, so let the other schemes try
             if (!Request.Headers.TryGetValue(ApiKeyHeaderName, out var apiKeyHeaderValues))
             {
                 return AuthenticateResult.NoResult();

@@ -13,6 +13,7 @@ namespace InventoryManagement.Web.Services
             _environment = environment;
         }
 
+        /// <summary>Makes an API image path absolute, pointing at the gateway in development.</summary>
         public string? GetImageUrl(string relativePath)
         {
             if (string.IsNullOrEmpty(relativePath)) return null;
