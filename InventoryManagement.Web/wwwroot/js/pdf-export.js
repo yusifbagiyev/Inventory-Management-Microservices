@@ -23,7 +23,7 @@
         if (codeCell) {
             const badge = codeCell.querySelector('.badge');
             if (badge) {
-                codeCell.innerHTML = `<strong style="color: #1e40af;">${badge.textContent.trim()}</strong>`;
+                codeCell.innerHTML = `<strong style="color: #1e40af;">${escapeHtml(badge.textContent.trim())}</strong>`;
             }
         }
 
@@ -34,14 +34,15 @@
             const category = detailsCell.querySelector('.fa-tag')?.parentElement?.textContent?.trim() || '';
 
             detailsCell.innerHTML = `
-                <div><strong>Vendor: ${vendor}</strong></div>
-                <div style="font-size: 9pt;">Model: ${model}</div>
-                <div style="font-size: 9pt;">Category: ${category}</div>
+                <div><strong>Vendor: ${escapeHtml(vendor)}</strong></div>
+                <div style="font-size: 9pt;">Model: ${escapeHtml(model)}</div>
+                <div style="font-size: 9pt;">Category: ${escapeHtml(category)}</div>
             `;
         }
     });
 
-    tableClone.querySelectorAll('td:nth-child(4)').forEach(cell => { // Location
+    // Image and Actions are gone, so Location is the 3rd column and Status the 4th.
+    tableClone.querySelectorAll('td:nth-child(3)').forEach(cell => {
         const deptText = cell.textContent.trim();
         const parts = deptText.split('(');
 
@@ -50,20 +51,20 @@
             const worker = parts[1].replace(')', '').trim();
 
             cell.innerHTML = `
-                <div><strong>${department}</strong></div>
-                <div style="font-size: 8pt; color: #666;">${worker}</div>
+                <div><strong>${escapeHtml(department)}</strong></div>
+                <div style="font-size: 8pt; color: #666;">${escapeHtml(worker)}</div>
             `;
         }
     });
 
     // Status shows the working and active badges one per line.
-    tableClone.querySelectorAll('td:nth-child(5)').forEach(cell => {
+    tableClone.querySelectorAll('td:nth-child(4)').forEach(cell => {
         const badges = cell.querySelectorAll('.badge');
         let statusHTML = '';
 
         badges.forEach(badge => {
             const text = badge.textContent.trim();
-            statusHTML += `<span class="badge" style="display: block; margin: 2px 0;">${text}</span>`;
+            statusHTML += `<span class="badge" style="display: block; margin: 2px 0;">${escapeHtml(text)}</span>`;
         });
 
         cell.innerHTML = statusHTML;
@@ -132,8 +133,8 @@ function exportRoutesToPDF() {
         const vendorModel = cell.textContent.replace(badge?.textContent || '', '').trim();
 
         cell.innerHTML = `
-            <div><strong>Code: ${badge?.textContent || ''}</strong></div>
-            <div>${vendorModel}</div>
+            <div><strong>Code: ${escapeHtml(badge?.textContent || '')}</strong></div>
+            <div>${escapeHtml(vendorModel)}</div>
         `;
     });
 

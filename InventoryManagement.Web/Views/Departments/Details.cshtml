@@ -237,12 +237,14 @@
 @functions {
     private string GetCategoryColor(string? categoryName)
     {
-        // String hashes are randomized per process, so a category keeps its colour only until the app restarts.
         var colors = new[] { "#667eea", "#764ba2", "#f093fb", "#4facfe", "#43e97b", "#fa709a", "#30cfd0", "#c471ed" };
         if (string.IsNullOrEmpty(categoryName)) return colors[0];
 
-        var hash = categoryName.GetHashCode();
-        return colors[Math.Abs(hash) % colors.Length];
+        // Own hash because string.GetHashCode changes between runs, so the colours would too.
+        var hash = 0;
+        foreach (var c in categoryName)
+            hash = unchecked(hash * 31 + c);
+        return colors[(hash & int.MaxValue) % colors.Length];
     }
 }
 

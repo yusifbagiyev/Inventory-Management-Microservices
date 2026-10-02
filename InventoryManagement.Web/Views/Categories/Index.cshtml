@@ -275,8 +275,11 @@
 @section Scripts {
     <script src="~/js/pdf-export.js" asp-append-version="true"></script>
     <script>
+        // All rows of the page, kept so a filter can bring back rows an earlier filter removed.
+        let categoryRows = [];
+
         $(document).ready(function() {
-            const allCategories = Array.from(document.querySelectorAll('#categoriesTable tr'));
+            categoryRows = Array.from(document.querySelectorAll('#categoriesTable tr'));
 
             $('#statusFilter, #sortBy').on('change', function() {
                 filterCategories();
@@ -285,20 +288,16 @@
             restoreFilterValues();
         });
 
+        // The search box is applied on the server, so only status and sort run here.
         function filterCategories() {
             const statusFilter = $('#statusFilter').val();
             const sortBy = $('#sortBy').val();
 
-            const allRows = Array.from(document.querySelectorAll('#categoriesTable tr'));
-
-            let visibleRows = allRows.filter(row => {
-
+            let visibleRows = categoryRows.filter(row => {
                 const isActive = row.querySelector('.badge.bg-success-soft') !== null;
-                const matchesStatus = !statusFilter ||
+                return !statusFilter ||
                     (statusFilter === 'active' && isActive) ||
                     (statusFilter === 'inactive' && !isActive);
-
-                return matchesSearch && matchesStatus;
             });
 
             visibleRows.sort((a, b) => {

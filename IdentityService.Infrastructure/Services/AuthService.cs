@@ -113,24 +113,22 @@ namespace IdentityService.Infrastructure.Services
 
             if (!string.IsNullOrEmpty(dto.AccessToken))
             {
+                int? tokenUserId = null;
                 try
                 {
                     var principal = _tokenService.GetPrincipalFromExpiredToken(dto.AccessToken);
-                    var tokenUserId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-                    if (!string.IsNullOrEmpty(tokenUserId) && int.TryParse(tokenUserId, out int parsedUserId))
-                    {
-                        if (parsedUserId != user.Id)
-                        {
-                            throw new UnauthorizedAccessException("Token user mismatch");
-                        }
-                    }
+                    if (int.TryParse(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId))
+                        tokenUserId = parsedUserId;
                 }
                 catch (Exception ex)
                 {
-                    // Only logged.
+                    // An unreadable access token is ignored, the refresh token is enough.
                     _logger?.LogWarning(ex, "Access token validation failed during refresh, but continuing with valid refresh token");
                 }
+
+                // A readable token of another user is refused.
+                if (tokenUserId.HasValue && tokenUserId.Value != user.Id)
+                    throw new UnauthorizedAccessException("Token user mismatch");
             }
             else
             {

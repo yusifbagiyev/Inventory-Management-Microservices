@@ -142,7 +142,7 @@ namespace InventoryManagement.Web.Middleware
         }
         private bool IsAjaxRequest(HttpRequest request)
         {
-            return request.Headers["X-Requested-Width"] == "XMLHttpRequest" ||
+            return request.Headers["X-Requested-With"] == "XMLHttpRequest" ||
                    request.ContentType?.Contains("application/json") == true ||
                    request.Headers.Accept.ToString().Contains("application/json");
         }

@@ -186,9 +186,10 @@ namespace InventoryManagement.Web.Services
 
 
         /// <summary>Embeds an image file as an inline picture.</summary>
-        private Run CreateImageRun(MainDocumentPart mainPart, string imagePath, string imageName, int widthInPoints, int heightInPoints)
+        private Run CreateImageRun(MainDocumentPart mainPart, string imagePath, string imageName, int widthInPixels, int heightInPixels)
         {
-            ImagePart imagePart = mainPart.AddImagePart(ImagePartType.Png);
+            var extension = Path.GetExtension(imagePath).ToLowerInvariant();
+            ImagePart imagePart = mainPart.AddImagePart(extension is ".jpg" or ".jpeg" ? ImagePartType.Jpeg : ImagePartType.Png);
 
             using (FileStream stream = new FileStream(imagePath, FileMode.Open))
             {
@@ -197,9 +198,9 @@ namespace InventoryManagement.Web.Services
 
             string relationshipId = mainPart.GetIdOfPart(imagePart);
 
-            // 9525 EMU is one pixel at 96 DPI, so the sizes are really pixels, not points.
-            long widthInEmus = widthInPoints * 9525;
-            long heightInEmus = heightInPoints * 9525;
+            // 9525 EMU is one pixel at 96 DPI.
+            long widthInEmus = widthInPixels * 9525L;
+            long heightInEmus = heightInPixels * 9525L;
 
             var element = new Drawing(
                 new DW.Inline(
@@ -388,25 +389,6 @@ namespace InventoryManagement.Web.Services
         /// <summary>The handed-over and received signature lines, kept on the same page.</summary>
         private void AddSignatureSection(Body body, DepartmentViewModel department)
         {
-            var signatureTable = new Table();
-
-            var tblProp = new TableProperties();
-            tblProp.Append(new TableWidth { Width = "5000", Type = TableWidthUnitValues.Pct });
-
-            var tblBorders = new TableBorders(
-                new TopBorder { Val = BorderValues.None },
-                new BottomBorder { Val = BorderValues.None },
-                new LeftBorder { Val = BorderValues.None },
-                new RightBorder { Val = BorderValues.None },
-                new InsideHorizontalBorder { Val = BorderValues.None }
-            );
-            tblProp.Append(tblBorders);
-
-            tblProp.Append(new TableStyle { Val = "TableGrid" });
-
-            signatureTable.Append(tblProp);
-
-
             var transferredPara = new Paragraph();
             var transferredParaProp = new ParagraphProperties();
             transferredParaProp.Append(new SpacingBetweenLines { Before = "120", After = "120" });

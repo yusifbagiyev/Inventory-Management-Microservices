@@ -625,7 +625,7 @@ namespace NotificationService.Infrastructure.Services
 
                 bool success;
 
-                if (routeEvent.ImageUrl != null & routeEvent.ImageData?.Length > 0)
+                if (routeEvent.ImageUrl != null && routeEvent.ImageData?.Length > 0)
                 {
                     success = await whatsAppService.SendGroupMessageWithImageDataAsync(
                         groupId,

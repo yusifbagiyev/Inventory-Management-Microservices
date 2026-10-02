@@ -173,36 +173,6 @@ namespace InventoryManagement.Web.Controllers
             }
             try
             {
-                var product = await _apiService.GetAsync<ProductDto>($"api/products/{model.ProductId}");
-                var departments = await _apiService.GetAsync<List<DepartmentDto>>("api/departments");
-
-                var fromDepartment = departments?.FirstOrDefault(d => d.Id == product?.DepartmentId);
-                var toDepartment = departments?.FirstOrDefault(d => d.Id == model.ToDepartmentId);
-
-                var actionData = new Dictionary<string, object>
-                {
-                    ["productId"] = model.ProductId,
-                    ["inventoryCode"] = product?.InventoryCode ?? 0,
-                    ["productModel"] = product?.Model ?? "",
-                    ["productVendor"] = product?.Vendor ?? "",
-                    ["fromDepartmentId"] = product?.DepartmentId ?? 0,
-                    ["fromDepartmentName"] = fromDepartment?.Name ?? "",
-                    ["fromWorker"] = product?.Worker ?? "",
-                    ["toDepartmentId"] = model.ToDepartmentId,
-                    ["toDepartmentName"] = toDepartment?.Name ?? "",
-                    ["toWorker"] = model.ToWorker ?? "",
-                    ["notes"] = model.Notes ?? ""
-                };
-
-                if (HttpContext.Request.Form.Files.Count > 0)
-                {
-                    var imageFile = HttpContext.Request.Form.Files[0];
-                    using var ms = new MemoryStream();
-                    await imageFile.CopyToAsync(ms);
-                    actionData["imageData"] = Convert.ToBase64String(ms.ToArray());
-                    actionData["imageFileName"] = imageFile.FileName;
-                }
-
                 var response = await _apiService.PostFormAsync<RouteViewModel>("api/inventoryroutes/transfer", HttpContext.Request.Form);
 
                 return HandleApiResponse(response, "Index");

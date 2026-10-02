@@ -56,7 +56,7 @@ namespace ProductService.Application.Features.Products.Commands
                 var departmentName = await _departmentRepository.GetByIdAsync(product.DepartmentId, cancellationToken)
                     ?? throw new ArgumentException($"Department with ID {product.DepartmentId} not found");
 
-                if (string.IsNullOrEmpty(changes))
+                if (!string.IsNullOrEmpty(changes))
                 {
                     var eventMessage = new ProductUpdatedEvent
                     {
@@ -69,7 +69,7 @@ namespace ProductService.Application.Features.Products.Commands
                             DepartmentName = departmentName.Name,
                             Worker = product.Worker,
                         },
-                        Changes = "Inventory code updated",
+                        Changes = changes,
                         UpdatedAt = DateTime.Now
                     };
                     await _messagePublisher.PublishAsync(eventMessage,"product.updated", cancellationToken);

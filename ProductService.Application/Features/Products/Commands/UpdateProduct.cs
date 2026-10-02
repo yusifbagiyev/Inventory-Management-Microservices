@@ -75,7 +75,7 @@ namespace ProductService.Application.Features.Products.Commands
                 };
 
                 var oldImageUrl = existingProduct.ImageUrl;
-                var newImageUrl = oldImageUrl;
+                string? uploadedImageUrl = null;
                 var shouldUpdateImage = updatedProduct.ImageFile != null && updatedProduct.ImageFile.Length > 0;
 
                 await _transactionService.ExecuteAsync(
@@ -91,25 +91,20 @@ namespace ProductService.Application.Features.Products.Commands
                         if (shouldUpdateImage)
                         {
                             using var stream = updatedProduct.ImageFile!.OpenReadStream();
-                            newImageUrl = await _imageService.UploadImageAsync(stream, updatedProduct.ImageFile.FileName, product.InventoryCode);
+                            uploadedImageUrl = await _imageService.UploadImageAsync(stream, updatedProduct.ImageFile.FileName, product.InventoryCode);
 
                             using var ms = new MemoryStream();
                             await updatedProduct.ImageFile!.CopyToAsync(ms);
                             updateEvent.ImageData = ms.ToArray();
                             updateEvent.ImageFileName = updatedProduct.ImageFile.FileName;
                         }
-                        if (shouldUpdateImage && !string.IsNullOrEmpty(oldImageUrl))
-                        {
-                            await _imageService.DeleteImageAsync(oldImageUrl);
-                        }
-
                         product.Update(
                             updatedProduct.Model,
                             updatedProduct.Vendor,
                             updatedProduct.CategoryId,
                             updatedProduct.DepartmentId,
                             updatedProduct.Worker,
-                            shouldUpdateImage ? newImageUrl : oldImageUrl,
+                            uploadedImageUrl ?? oldImageUrl,
                             updatedProduct.Description,
                             updatedProduct.IsActive,
                             updatedProduct.IsNewItem,
@@ -122,11 +117,18 @@ namespace ProductService.Application.Features.Products.Commands
                     },
                     async () =>
                     {
-                        if (!string.IsNullOrEmpty(newImageUrl))
+                        // Only the file this update uploaded. The product's current image stays.
+                        if (!string.IsNullOrEmpty(uploadedImageUrl))
                         {
-                            await _imageService.DeleteImageAsync(newImageUrl);
+                            await _imageService.DeleteImageAsync(uploadedImageUrl);
                         }
                     });
+
+                // The old image goes only after the new one is saved.
+                if (uploadedImageUrl != null && !string.IsNullOrEmpty(oldImageUrl))
+                {
+                    await _imageService.DeleteImageAsync(oldImageUrl);
+                }
             }
         }
     }

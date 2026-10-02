@@ -231,7 +231,7 @@ namespace InventoryManagement.Web.Controllers
         public async Task<IActionResult> RefreshToken()
         {
             var refreshToken = Request.Cookies["refresh_token"];
-            var accessToken = HttpContext.Session.GetString("jwt_token");
+            var accessToken = HttpContext.Session.GetString("JwtToken");
 
             if (string.IsNullOrEmpty(refreshToken) || string.IsNullOrEmpty(accessToken))
             {
